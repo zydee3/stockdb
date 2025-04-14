@@ -1,6 +1,56 @@
-# StockDB - Financial Market Database
+# StockDB - Personal Financial Market Database
 
-## Design Overview
+StockDB is a purpose-built, lightweight database solution for standardizing and 
+storing financial market data with an intuitive organization that aligns with 
+how analysts naturally think about financial information. StockDB maintains a 
+high-performance architecture while making deliberate trade-offs that favor 
+simplicity and maintainability over enterprise-scale capabilities. Our approach 
+aims to deliver reliable performance within modest resource constraints by using 
+lightweight, integrated solutions rather than complex external systems meant for
+enterprise-level scaling.
+
+## Implementation Overview
+
+### Architecture Components
+StockDB uses modular components that can run together or independently, allowing 
+for easy replacement or horizontal scaling of individual modules should you need 
+to scale.
+
+1. **Workers**: Source-specific data collectors that fetch from various APIs, 
+standardize the data into a common format, and push it to the queue.
+2. **Queue**: Lightweight Go channel-based queue with disk persistence that 
+buffers standardized data.
+3. **Persistence Layer**: Implements write-ahead logging to ensure data 
+durability before database operations.
+4. **Batch Processor**: Consumes standardized data from the queue and assembles 
+efficient batches for database operations.
+5. **Simple Caches**: Simple caches can be used at the worker and database 
+level. A worker cache can help coordinate redundant decision paths or data point processing. A database cache can be used to store recent query results. The size 
+of each cache is configurable.
+
+### Key Design Decisions
+1. Each component is designed to be modular and replacable if needed. 
+2. Data is persisted to prevent loss in case of failure at any stage in the 
+pipeline until the data is confirmed to be in the database. 
+3. Batching is triggered by either time or batch size. 
+4. Failed operations can be retrieved and retried from persistence storage. 
+
+### Sample Workflow
+1. A scraper worker fetches the latest price data for AAPL.
+2. Worker standardizes the raw price data for AAPL.
+3. Worker pushes the standardized data to the Queue.
+4. Persistence Layer writes the standardized data to disk (write-ahead log).
+5. Batch Processor pulls items from the Queue, accumlating items until reaching
+the configured threshold (e.g., 10 seconds or 100 items).
+6. Batch Processor writes the batch to the database and generates a 
+confirmation.
+7. Persistence accepts the confirmation and cleans up the processed items.
+
+If the system crashes during step 6, the system can recovery due to the 
+persistence layer. Items not written to the database will be stored on the disk
+and reconsumed by the Batch Processor upon system start.
+
+## Database Design Overview
 StockDB implements a securities-anchored architecture using TimescaleDB 
 hypertables with time-based partitioning. There were two approaches considered
 when designing StockDB:
