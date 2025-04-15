@@ -8,6 +8,9 @@ ContainerName=gpt-researcher
 AutoUpdate=registry
 PublishPort=8000:8000/tcp
 EnvironmentFile=%h/.config/containers/systemd/gpt-researcher.env
+Volume=gpt-researcher-output:/user/src/app/outputs:Z
+Volume=gpt-researcher-docs:/user/src/app/my-docs:Z
+Volume=gpt-researcher-logs:/user/src/app/logs:Z
 
 [Service]
 Restart=on-failure
