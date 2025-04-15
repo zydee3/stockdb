@@ -1,0 +1,16 @@
+[Unit]
+Description=GPT-Researcher service
+After=local-fs.target
+
+[Container]
+Image=docker.io/gptresearcher/gpt-researcher:latest
+ContainerName=gpt-researcher
+AutoUpdate=registry
+PublishPort=8000:8000/tcp
+EnvironmentFile=%h/.config/containers/systemd/gpt-researcher.env
+
+[Service]
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
