@@ -1,0 +1,22 @@
+[Unit]
+Description=StockDB PostgreSQL service
+After=local-fs.target
+
+[Container]
+Image=docker.io/postgres:latest
+ContainerName=stockdb
+AutoUpdate=registry
+PublishPort=5432:5432/tcp
+Volume=stockdb-pgdata:/var/lib/postgresql/data:Z
+EnvironmentFile=%h/.config/containers/systemd/stockdb.env
+# Update User and Database name of  HealthCmd with env variables.
+HealthCmd=pg_isready -U postgres -d stockdb
+HealthInterval=10s
+HealthRetries=5
+HealthTimeout=15s
+
+[Service]
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
