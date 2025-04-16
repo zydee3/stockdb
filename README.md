@@ -1,54 +1,63 @@
 # StockDB - Personal Financial Market Database
 
-StockDB is a purpose-built, lightweight database solution for standardizing and 
-storing financial market data with an intuitive organization that aligns with 
-how analysts naturally think about financial information. StockDB maintains a 
-high-performance architecture while making deliberate trade-offs that favor 
-simplicity and maintainability over enterprise-scale capabilities. Our approach 
-aims to deliver reliable performance within modest resource constraints by using 
-lightweight, integrated solutions rather than complex external systems meant for
-enterprise-level scaling.
+StockDB is a lightweight financial market data ingestion program that collects, 
+standardizes, and stores market information. Data is stored in an intuitive 
+structure that aligns with how individuals naturally think about stock 
+information. While optimized for performance, StockDB makes strategic trade-offs 
+to prioritize reliability within modest resource constraints. We deliberately 
+favor simplicity and maintainability over complex enterprise-scale capabilities, 
+creating a solution ideal for personalized self-hosted financial analytics.
 
 ## Implementation Overview
+
+### Architecture Core Principles
+1. Each component should be modular.
+2. Each step in the pipeline should be durable (i.e., all failures must be 
+recoverable).
+3. Each component must be stateless.
+4. Each component must be able to prove it's work was completed.
 
 ### Architecture Components
 StockDB uses modular components that can run together or independently, allowing 
 for easy replacement or horizontal scaling of individual modules should you need 
-to scale.
+to scale. 
 
-1. **Workers**: Source-specific data collectors that fetch from various APIs, 
-standardize the data into a common format, and push it to the queue.
-2. **Queue**: Lightweight Go channel-based queue with disk persistence that 
-buffers standardized data.
-3. **Persistence Layer**: Implements write-ahead logging to ensure data 
-durability before database operations.
-4. **Batch Processor**: Consumes standardized data from the queue and assembles 
+1. **Workers**: Source-specific collectors that connect external data sources to 
+StockDB. Each worker fetches raw data from designated APIs, standardizes it, and 
+pushes it to the Stream. Workers treat data sources as "black boxes" - focusing 
+only on retrieval and standardization. The data fetched can be configured to 
+persisted on disk until the Stream provides a valid certificate confirming the 
+data has been successfully processed. 
+2. **Stream**: Lightweight pub/sub streamer that implements data persistence to 
+ensure durability. The data recieved can be configured to be stored on the disk
+until the Stream receives a valid certificate confirming the data has been
+received by all subscribers.
+4. **Batch Processor**: Consumes standardized data from the stream and assembles 
 efficient batches for database operations.
-5. **Simple Caches**: Simple caches can be used at the worker and database 
-level. A worker cache can help coordinate redundant decision paths or data point processing. A database cache can be used to store recent query results. The size 
-of each cache is configurable.
-
-### Key Design Decisions
-1. Each component is designed to be modular and replacable if needed. 
-2. Data is persisted to prevent loss in case of failure at any stage in the 
-pipeline until the data is confirmed to be in the database. 
-3. Batching is triggered by either time or batch size. 
-4. Failed operations can be retrieved and retried from persistence storage. 
+5. **Caches**: Caches are used to store recent query results. For example, a 
+cache can be used to store the most recent queries handled by the worker to 
+avoid redundant query processing. 
 
 ### Sample Workflow
-1. A scraper worker fetches the latest price data for AAPL.
-2. Worker standardizes the raw price data for AAPL.
-3. Worker pushes the standardized data to the Queue.
-4. Persistence Layer writes the standardized data to disk (write-ahead log).
-5. Batch Processor pulls items from the Queue, accumlating items until reaching
-the configured threshold (e.g., 10 seconds or 100 items).
-6. Batch Processor writes the batch to the database and generates a 
-confirmation.
-7. Persistence accepts the confirmation and cleans up the processed items.
+1. Worker fetches raw data from an API.
+2. Worker writes raw data to disk for persistence.
+3. Worker standardizes the raw data into a standardized format.
+4. Worker publishes the standardized data to the Stream.
+5. Stream receives the standardized data and writes it to disk for persistence.
+6. Stream writes the standardized data to disk for persistence.
+7. Stream writes a certificate to Worker.
+8. Worker receives the certificate and deletes the raw data from disk.
+9. Stream writes the data to the topic subcribers.
+10. Each subscriber receives the data, processes it, writes a certificate to the
+Stream. 
+11. Stream receives the certificates and deletes the data from disk.
 
-If the system crashes during step 6, the system can recovery due to the 
-persistence layer. Items not written to the database will be stored on the disk
-and reconsumed by the Batch Processor upon system start.
+### Sample Workflow Failure Recovery
+1. If the system crashes during steps 3-8, the system can recovery by having the 
+workers re-read the data from disk, re-standardizing, and re-publishing it to 
+the Stream.
+2. If the system crashes during steps 9-11, the system can recovery by having
+the Stream re-read the data from disk and re-publish it to the subscribers.
 
 ## Database Design Overview
 StockDB implements a securities-anchored architecture using TimescaleDB 
