@@ -115,3 +115,6 @@ articles, earnings, etc.
 - ON CONFLICT clauses for upsert operations
 - Hash-based existence checks for rapid duplicate detection
 - Appropriate constraints to maintain data integrity
+
+
+## Project Structure Overview
