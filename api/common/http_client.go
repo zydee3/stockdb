@@ -7,22 +7,22 @@ import (
 )
 
 type HTTPClient struct {
-	client        *http.Client
-	retryCount    *int
-	retryWaitTime *time.Duration
+	Client        *http.Client
+	RetryCount    int
+	RetryWaitTime time.Duration
 }
 
 func (h *HTTPClient) Do(request *http.Request) (*http.Response, error) {
 	var response *http.Response
 	var err error
 
-	retries := *h.retryCount
+	retries := h.RetryCount
 	for retries > 0 {
-		response, err = h.client.Do(request)
+		response, err = h.Client.Do(request)
 		if err == nil {
 			break
 		}
-		time.Sleep(*h.retryWaitTime)
+		time.Sleep(h.RetryWaitTime)
 		retries--
 	}
 
