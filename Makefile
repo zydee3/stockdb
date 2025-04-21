@@ -18,6 +18,13 @@ vendor:
 	@go mod vendor
 	@go mod verify
 
+.PHONY: vendor
+verify-vendor: vendor
+	# Apache License 2.0 from RunC
+	@test -z "$$(git status --porcelain -- go.mod go.sum vendor/)" \
+		|| (echo -e "git status:\n $$(git status -- go.mod go.sum vendor/)\nerror: vendor/, go.mod and/or go.sum not up to date. Run \"make vendor\" to update"; exit 1) \
+		&& echo "all vendor files are up to date."
+
 # Build target
 .PHONY: build
 build: clean
