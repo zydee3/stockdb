@@ -8,8 +8,8 @@ import (
 )
 
 type HTTPClient struct {
-	httpClient common.HTTPClient
-	apiKey     string
+	HttpClient common.HTTPClient
+	ApiKey     string
 }
 
 const (
@@ -21,7 +21,7 @@ func (h *HTTPClient) Get(endpoint string, data map[string]string) (*http.Respons
 		data = map[string]string{}
 	}
 
-	data["api_key"] = h.apiKey
+	data["api_key"] = h.ApiKey
 
 	var dataStringBuilder strings.Builder
 	for key, value := range data {
@@ -33,5 +33,5 @@ func (h *HTTPClient) Get(endpoint string, data map[string]string) (*http.Respons
 
 	endpoint = fmt.Sprintf("%s/%s?%s", fmpUrl, endpoint, dataStringBuilder.String())
 
-	return h.httpClient.Get(endpoint)
+	return h.HttpClient.Get(endpoint)
 }
