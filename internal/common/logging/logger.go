@@ -2,15 +2,15 @@ package logger
 
 import (
 	"fmt"
-        "log/slog"
+	"log/slog"
 	"os"
 )
 
 var logger *slog.Logger
 
 func SetupLogger() {
-        // TODO: Load logging info form config file and cli options
-        logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+	// TODO: Load logging info from config file and cli options
+	logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
 func Debug(msg string, args ...any) {
@@ -38,9 +38,9 @@ func Errorf(format string, args ...any) {
 }
 
 func Warn(msg string, args ...any) {
-        logger.Warn(msg, args...)
+	logger.Warn(msg, args...)
 }
 
 func Warnf(format string, args ...any) {
-        logger.Warn(fmt.Sprintf(format, args...))
+	logger.Warn(fmt.Sprintf(format, args...))
 }
