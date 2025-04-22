@@ -30,7 +30,7 @@ func Infof(format string, args ...any) {
 }
 
 func Error(msg string, args ...any) {
-	logger.Error(msg, args)
+	logger.Error(msg, args...)
 }
 
 func Errorf(format string, args ...any) {
