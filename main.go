@@ -1,9 +1,15 @@
 package main
 
 import (
-	"fmt"
+	"github.com/zydee3/stockdb/internal/common/logging"
+)
+
+var (
+	version = ""
+	gitCommit = ""
 )
 
 func main() {
-	fmt.Println("Hello StockDB!")
+	logger.SetupLogger()
+	logger.Infof("Starting StockDB. Version: %s. Commit: %s", version, gitCommit)
 }
