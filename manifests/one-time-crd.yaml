@@ -1,0 +1,21 @@
+apiVersion: stockdbv1
+kind: DataCollection
+metadata:
+  name: apple-microsoft-google-news-01-01-2025-04-01-2025
+spec:
+  source:
+    type: "FMP"
+    endpoint: "NEWS"
+  targets:
+    securities:
+      - symbol: "AAPL"
+      - symbol: "MSFT"
+      - symbol: "GOOGL"
+  schedule:
+    type: "INTERVAL"
+    startDate: "2025-01-01T00:00:00Z"
+    endDate: "2025-04-01T00:00:00Z"
+  options:
+    timeout: "30m"
+    retries: 3
+    priority: 1

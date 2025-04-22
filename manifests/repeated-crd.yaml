@@ -1,0 +1,22 @@
+apiVersion: stockdbv1
+kind: DataCollection
+metadata:
+  name: real-time-nvidia-amd-prices
+spec:
+  source:
+    type: "FMP"
+    endpoint: "PRICES"
+    parameters:
+      resolution: "1min"
+  targets:
+    securities:
+      - symbol: "NVDA"
+      - symbol: "AMD"
+  schedule:
+    type: "RECURRING"
+    frequency: "MINUTE"
+    startFrom: "2025-04-21T09:30:00Z"
+  options:
+    timeout: "15s"
+    retries: 2
+    priority: 5
