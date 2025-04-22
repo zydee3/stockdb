@@ -11,5 +11,5 @@ var (
 
 func main() {
 	logger.SetupLogger()
-	logger.Infof("Starting StockDB. Version: %s. Commit: %s", version, gitCommit)
+	logger.Infof("Starting StockDB. Version: %s. Commit: %s.", version, gitCommit)
 }
