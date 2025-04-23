@@ -32,11 +32,6 @@ var applyYamlCommand = cli.Command{
 			return cli.NewExitError("no yaml file provided", 1)
 		}
 
-		// Check if the filename is provided
-		if filename == "" && c.NArg() == 0 {
-			return cli.NewExitError("no yaml file provided", 1)
-		}
-
 		// check if the file exists
 		if _, err := os.Stat(filename); os.IsNotExist(err) {
 			return cli.NewExitError(fmt.Sprintf("file %s does not exist", filename), 1)

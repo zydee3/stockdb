@@ -66,7 +66,6 @@ func (t *Tracker) AddAttribute(id uint64, key, value string) {
 
 	if metadata, exists := t.metadata[id]; exists {
 		metadata.attributes[key] = value
-		t.metadata[id] = metadata
 	}
 }
 
