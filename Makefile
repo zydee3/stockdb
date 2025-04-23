@@ -31,8 +31,26 @@ $(STOCKDB_OUTPUT_BINARY_NAME):
 .PHONY: $(STOCKCTL_OUTPUT_BINARY_NAME)
 $(STOCKCTL_OUTPUT_BINARY_NAME):
 	@echo "Building $(STOCKCTL_OUTPUT_BINARY_NAME)"
-	@mkdir -p $(BUILD_DIRECTORY)
+  @mkdir -p $(BUILD_DIRECTORY)
 	@go build $(GOLANG_BUILD_FLAGS) -o $(BUILD_DIRECTORY)/$(STOCKCTL_OUTPUT_BINARY_NAME) -ldflags "$(LDFLAGS_COMMON)" cmd/stockctl/main.go
+
+.PHONY: vendor
+vendor:
+	@go mod tidy
+	@go mod vendor
+	@go mod verify
+
+# Apache License 2.0 from RunC
+.PHONY: vendor
+verify-vendor: vendor
+	@test -z "$$(git status --porcelain -- go.mod go.sum vendor/)" \
+		|| (echo -e "git status:\n $$(git status -- go.mod go.sum vendor/)\nerror: vendor/, go.mod and/or go.sum not up to date. Run \"make vendor\" to update"; exit 1) \
+		&& echo "all vendor files are up to date."
+
+# Build target
+.PHONY: build
+build: clean
+	@echo "Building $(OUTPUT_BINARY_NAME)"
 
 # Run stockdb
 .PHONY: run-$(STOCKDB_OUTPUT_BINARY_NAME)
@@ -40,6 +58,15 @@ run-$(STOCKDB_OUTPUT_BINARY_NAME): $(STOCKDB_OUTPUT_BINARY_NAME)
 	@echo "Running $(STOCKDB_OUTPUT_BINARY_NAME)"
 	@echo "=== RUN OUTPUT ===================="
 	@./$(BUILD_DIRECTORY)/$(STOCKDB_OUTPUT_BINARY_NAME)
+
+.PHONY: test
+test:
+	@echo "Running tests"
+	@go test $(GOLANG_BUILD_FLAGS) ./...
+
+.PHONY: lint
+lint:
+	@golangci-lint run ./...
 
 # Run stockctl
 .PHONY: run-$(STOCKCTL_OUTPUT_BINARY_NAME)
