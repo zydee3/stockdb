@@ -1,12 +1,16 @@
 package apiclient
 
 import (
+	"encoding/json"
 	"fmt"
+	"net"
 	"os"
 
 	"github.com/urfave/cli"
+	"github.com/zydee3/stockdb/internal/api/messages"
 	"gopkg.in/yaml.v3"
 
+	"github.com/zydee3/stockdb/internal/api/socket"
 	"github.com/zydee3/stockdb/internal/api/types/crd"
 )
 
@@ -48,10 +52,35 @@ var applyYamlCommand = cli.Command{
 			return cli.NewExitError(err.Error(), 1)
 		}
 
-		fmt.Println("Parsed DataCollection:", crd)
-		fmt.Println("Name:", crd.Metadata.Name)
-		fmt.Println("Source Type:", crd.Spec.Source.Type)
-		fmt.Println("Securities:", crd.Spec.Targets.Securities)
+		conn, err := net.Dial("unix", socket.SOCKET_PATH)
+		if err != nil {
+			fmt.Println("Error connecting to socket:", err)
+			os.Exit(1)
+		}
+		defer conn.Close()
+
+		cmd := messages.Command{
+			Type:       messages.CommandTypeApply,
+			Parameters: make(map[string]string),
+			Data:       crd,
+		}
+
+		encoder := json.NewEncoder(conn)
+		if err := encoder.Encode(cmd); err != nil {
+			fmt.Println("Error encoding command:", err)
+			return cli.NewExitError(err.Error(), 1)
+		}
+
+		// Receive and parse response
+		response := messages.Response{}
+
+		decoder := json.NewDecoder(conn)
+		if err := decoder.Decode(&response); err != nil {
+			fmt.Println("Error decoding response:", err)
+			os.Exit(1)
+		}
+
+		fmt.Println("Response from server:", response)
 
 		return nil
 	},
