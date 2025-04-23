@@ -1,1 +1,1 @@
-package commonconfig
+package config
