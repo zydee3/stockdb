@@ -1,43 +1,52 @@
 # StockDB - Personal Financial Market Database
+
 StockDB is a lightweight financial market data collection and storage solution
-designed for individual analysts and researchers. Data is stored in an intuitive
-structure that aligns with how individuals naturally think about stock
-information.
+designed for personal or small-scale environments. The system follows an
+intuitive data model that mirrors how individuals naturally think about stock
+information, ensuring queries are both intuitive and efficient.
 
-## Core Design Philosophy
+## StockDB Architecture
 
-StockDB prioritizes reliability and intuitive data organization within modest
-resource constraints. Rather than attempting to compete with enterprise-scale
-solutions, we focus on:
+StockDB follows a Kubernetes-inspired architecture with two primary components:
 
-1. Simplicity: Clear, understandable architecture that's easy to maintain
-2. Reliability: Simple and effective consistency and error handling.
-3. Intuitive Design: The implementation should be intuitive.
-4. Efficient: Optimized for personal or small-scale environments.
+1. `stockd`: A daemon service that orchestrates data collection through a
+   manager and worker pool
+2. `stockctl`: A command-line interface tool for interacting with the daemon
 
-## System Architecture
+Users submit data collection jobs by creating YAML configuration files and
+applying them through stockctl, similar to how Kubernetes handles Custom
+Resource Definitions (CRDs).
 
-StockDB implements a CRD-based scheduler (Kubernetes-inspired) architecture with
-3 core components:
+### Stockd Service
 
-### 1. Manager
+1. Manager:
+   - Processes and validates incoming job definitions
+   - Schedules jobs based on priority and resource availability
+   - Monitors job execution and handles failure scenarios
+   - Maintains job state and provides status updates
+   - Implements configurable retry policies for failed jobs
+   - Provides persistence to protect against service interruptions
+2. Job Queue: A light weight priority queue that:
+   - Maintains prioritized pending and in-progress jobs
+   - Supports configurable job priorities
+   - Supports efficient job batching for optimal resource utilization
+3. Workers: A job processor that:
+   - Executes data collection jobs from multiple financial data sources
+   - Standardizes collected data into a consistent internal format
+   - Implements rate limiting and backoff strategies for API calls
+   - Performs data validation before storage
+   - Optimizes batch writes to the database
+4. Communication
+   - Listenes on a Unix socket for local communication with `stockctl`
+   - Implements well-defined communication for job submission and status queries
+   - Provides graceful shutdown and request metrics for monitoring and logging
 
-The manager handles job scheduling and processing:
-- Accepts Custom Resource Definitions (CRDs) that define data collection tasks.
-- Monitors job status and handles job completion failures.
+### Stockctl Command-line Tool
 
-### 2. Job Queue
-A light weight priority queue that:
-- Orders jobs by priority.
-- Holds pending and incomplete jobs for workers to consume.
-
-### 3. Workers
-A job processor that:
-
-- Accepts job batches from the job queue.
-- Standardizes collected data into a consistent format.
-- Writes completed batches to the database.
-- Reports the job status to the Manager.
+- Creates, submits, monitors, and manages data collection jobs
+- Validates job configurations before submission
+- Supports real-time status monitoring of running jobs
+- Offers job management capabilities (pause, resume, cancel)
 
 ## Workflow Examples
 
@@ -45,13 +54,13 @@ A job processor that:
 
 1. The user submits a CRD to collect data for a security.
 2. The manager creates separate job batches for each security.
-
 3. The worker claims a batch of jobs that are related by security.
 4. The worker processes each job in the batch (collect and standardize).
 5. The worker writes the standardized data batch to the database.
 6. The worker marks the job as completed and provides a completion certificate.
 
 ### Handling Failures.
+
 1. If a job fails (API unavailable, network issues, etc), it will be retried.
 2. The worker writes the standardized data from the successful jobs to the
    database.
@@ -60,7 +69,6 @@ A job processor that:
 4. The manager reclaims the failed job.
 5. Failed job enters an exponential backoff period and retried.
 6. After a configurable retry limit, the job is logged and abandoned.
-
 
 ## Database Design Overview
 
