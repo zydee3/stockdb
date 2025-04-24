@@ -1,63 +1,60 @@
 # StockDB - Personal Financial Market Database
-
-StockDB is a lightweight financial market data ingestion program that collects, 
-standardizes, and stores market information. Data is stored in an intuitive 
+StockDB is a lightweight financial market data collection and storage solution 
+designed for individual analysts and researchers. Data is stored in an intuitive 
 structure that aligns with how individuals naturally think about stock 
-information. While optimized for performance, StockDB makes strategic trade-offs 
-to prioritize reliability within modest resource constraints. We deliberately 
-favor simplicity and maintainability over complex enterprise-scale capabilities, 
-creating a solution ideal for personalized self-hosted financial analytics.
+information. 
 
-## Implementation Overview
+## Core Design Philosphy
+StockDB prioritizes reliability and intuitive data organization within modest 
+resource constraints. Rather than attempting to compete with enterprise-scale 
+solutions, we focus on:
 
-### Architecture Core Principles
-1. Each component should be modular.
-2. Each step in the pipeline should be durable (i.e., all failures must be 
-recoverable).
-3. Each component must be stateless.
-4. Each component must be able to prove it's work was completed.
+1. Simplicity: Clear, understandable architecture that's easy to maintain
+2. Reliability: Simple and effective consistency and error handling.
+3. Intuitive Design: The implementation should be intuitive.
+4. Efficient: Optimized for personal or small-scale environments.
 
-### Architecture Components
-StockDB uses modular components that can run together or independently, allowing 
-for easy replacement or horizontal scaling of individual modules should you need 
-to scale. 
+## System Architecture
+StockDB implements a CRD-based scheduler (Kubernetes-inspired) architecture with 
+3 core components:
 
-1. **Workers**: Source-specific collectors that connect external data sources to 
-StockDB. Each worker fetches raw data from designated APIs, standardizes it, and 
-pushes it to the Stream. Workers treat data sources as "black boxes" - focusing 
-only on retrieval and standardization. The data fetched can be configured to 
-persisted on disk until the Stream provides a valid certificate confirming the 
-data has been successfully processed. 
-2. **Stream**: Lightweight pub/sub streamer that implements data persistence to 
-ensure durability. The data recieved can be configured to be stored on the disk
-until the Stream receives a valid certificate confirming the data has been
-received by all subscribers.
-4. **Batch Processor**: Consumes standardized data from the stream and assembles 
-efficient batches for database operations.
-5. **Caches**: Caches are used to store recent query results. For example, a 
-cache can be used to store the most recent queries handled by the worker to 
-avoid redundant query processing. 
+### 1. Manager
+The manager handles job scheduling and processing:
+- Accepts Custom Resource Definitions (CRDs) that define data collection tasks.
+- Monitors job status and handles job completion failures.
 
-### Sample Workflow
-1. Worker fetches raw data from an API.
-2. Worker writes raw data to disk for persistence.
-3. Worker standardizes the raw data into a standardized format.
-4. Worker publishes the standardized data to the Stream.
-5. Stream receives the standardized data and writes it to disk for persistence.
-6. Stream writes the standardized data to disk for persistence.
-7. Stream writes a certificate to Worker.
-8. Worker receives the certificate and deletes the raw data from disk.
-9. Stream writes the data to the topic subcribers.
-10. Each subscriber receives the data, processes it, writes a certificate to the
-Stream. 
-11. Stream receives the certificates and deletes the data from disk.
+### 2. Job Queue
+A light weight priority queue that:
+- Orders jobs by priority.
+- Holds pending and incomplete jobs for workers to consume.
 
-### Sample Workflow Failure Recovery
-1. If the system crashes during steps 3-8, the system can recovery by having the 
-workers re-read the data from disk, re-standardizing, and re-publishing it to 
-the Stream.
-2. If the system crashes during steps 9-11, the system can recovery by having
-the Stream re-read the data from disk and re-publish it to the subscribers.
+### 3. Workers
+A job processor that:
+- Accepts job batches from the job queue.
+- Standardizes collected data into a consistent format.
+- Writes completed batches to the database. 
+- Reports the job status to the Manager.
+
+
+## Workflow Examples
+
+### Successful Job Processing
+1. The user submits a CRD to collect data for a security.
+2. The manager creates separate job batches for each security. 
+3. The worker claims a batch of jobs that are related by security.
+4. The worker processes each job in the batch (collect and standardize).
+5. The worker writes the standardized data batch to the database.
+6. The worker marks the job as completed and provides a completion certificate.
+
+### Handling Failures.
+1. If a job fails (API unavailable, network issues, etc), it will be retried.
+2. The worker writes the standardized data from the successful jobs to the 
+database.
+3. The worker marks the job as incomplete and provides a completion certificate 
+for the successfully completed jobs. 
+4. The manager reclaims the failed job.
+5. Failed job enters an exponential backoff period and retried.
+6. After a configurable retry limit, the job is logged and abandoned. 
 
 ## Database Design Overview
 StockDB implements a securities-anchored architecture using TimescaleDB 
@@ -115,6 +112,3 @@ articles, earnings, etc.
 - ON CONFLICT clauses for upsert operations
 - Hash-based existence checks for rapid duplicate detection
 - Appropriate constraints to maintain data integrity
-
-
-## Project Structure Overview
