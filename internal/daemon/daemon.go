@@ -78,18 +78,17 @@ func (d *Daemon) Run() error {
 	select {
 	case sig := <-sigChan:
 		// Perform graceful shutdown of all services
-		return d.Shutdown(sig)
+		logger.Infof("Received shutdown signal: %s", sig)
+		return d.Shutdown()
 
 	case err := <-d.errors:
 		// A component reported an error
 		logger.Errorf("Component error: %s", err.Error())
-		return d.Shutdown(nil)
+		return d.Shutdown()
 	}
 }
 
-func (d *Daemon) Shutdown(sig os.Signal) error {
-	logger.Infof("Received shutdown signal: %s", sig)
-
+func (d *Daemon) Shutdown() error {
 	// Set shutdown deadline - don't wait forever
 	d.shutdownTimer = time.NewTimer(30 * time.Second)
 
@@ -131,7 +130,7 @@ func Init() {
 	}
 
 	if err := app.Run(os.Args); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
+		logger.Errorf("Error: %s", err.Error())
 		os.Exit(1)
 	}
 }

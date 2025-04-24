@@ -51,9 +51,9 @@ var applyYamlCommand = cli.Command{
 
 		conn, err := net.Dial("unix", socket.SOCKET_PATH)
 		if err != nil {
-			logger.Errorf("Error connecting to socket: %s", err.Error())
-			os.Exit(1)
+			return cli.NewExitError(fmt.Sprintf("failed to connect to socket: %s", err.Error()), 1)
 		}
+
 		defer conn.Close()
 
 		cmd := messages.Command{
@@ -73,8 +73,7 @@ var applyYamlCommand = cli.Command{
 
 		decoder := json.NewDecoder(conn)
 		if err := decoder.Decode(&response); err != nil {
-			logger.Errorf("Error decoding response: %s", err.Error())
-			os.Exit(1)
+			return cli.NewExitError(fmt.Sprintf("failed to decode response: %s", err.Error()), 1)
 		}
 
 		logger.Info("Response received from server:", response)

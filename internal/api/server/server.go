@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"time"
@@ -47,7 +46,7 @@ func StartServer(socketPath string, ctx context.Context) error {
 
 func createSocketDirectory(socketPath string) error {
 	// Delete the socket file if it exists
-	if err := os.RemoveAll(socketPath); err != nil {
+	if err := os.Remove(socketPath); err != nil {
 		return fmt.Errorf("failed to remove socket: %s", err.Error())
 	}
 
@@ -158,7 +157,7 @@ func acceptConnections(listener net.Listener, ctx context.Context, tracker *Trac
 			}
 
 			// Otherwise, log the errors and continue accepting connections
-			log.Printf("Error accepting connection: %v", err)
+			logger.Errorf("Error accepting connection: %s", err.Error())
 		}
 	}
 }
@@ -174,18 +173,18 @@ func handleConnection(connection net.Conn, tracker *Tracker) {
 
 	cmd, err := parseCommand(connection)
 	if err != nil {
-		log.Printf("Error decoding command: %v", err)
+		logger.Errorf("Error parsing command: %s", err.Error())
 		sendErrorResponse(connection, "failed to decode command")
 		return
 	}
 
-	log.Printf("Received command: %+v", *cmd)
+	logger.Infof("Received command: %+v", *cmd)
 
 	response := requestHandlers[cmd.Type](*cmd)
 
 	// Send response back to client
 	if err := sendResponse(connection, response); err != nil {
-		log.Printf("Error encoding response: %v", err)
+		logger.Errorf("Error sending response: %s", err.Error())
 	}
 }
 
@@ -208,13 +207,13 @@ func sendErrorResponse(connection net.Conn, message string) {
 	}
 
 	if err := sendResponse(connection, response); err != nil {
-		log.Printf("Error sending error response: %s", err.Error())
+		logger.Errorf("Error sending error response: %s", err.Error())
 	}
 }
 
 func cleanupSocket(socketPath string) error {
 	if err := os.RemoveAll(socketPath); err != nil {
-		log.Printf("Failed to remove socket file: %v", err)
+		logger.Errorf("Failed to remove socket directory: %v", err)
 		return err
 	}
 

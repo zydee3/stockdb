@@ -11,12 +11,11 @@ import (
 )
 
 type Tracker struct {
-	wg            sync.WaitGroup             // Tracks active connections for graceful shutdown
-	active        atomic.Int64               // Current connection count for observability
-	totalAccepted atomic.Int64               // Total connections accepted (monotonic counter)
-	mu            sync.RWMutex               // Guards metadata map access
-	metadata      map[uint64]*connectionData // Per-connection metadata for tracing/debugging
-	nextID        atomic.Uint64              // Atomic ID generator for connection tracking
+	wg       sync.WaitGroup             // Tracks active connections for graceful shutdown
+	active   atomic.Int64               // Current connection count for observability
+	mu       sync.RWMutex               // Guards metadata map access
+	metadata map[uint64]*connectionData // Per-connection metadata for tracing/debugging
+	nextID   atomic.Uint64              // Atomic ID generator for connection tracking
 }
 
 type connectionData struct {
@@ -35,7 +34,6 @@ func (t *Tracker) Track(remoteAddr string) func() {
 	t.wg.Add(1)
 
 	active := t.active.Add(1)
-	total := t.totalAccepted.Add(1)
 	id := t.nextID.Add(1)
 
 	// Record connection metadata
@@ -49,7 +47,7 @@ func (t *Tracker) Track(remoteAddr string) func() {
 	t.mu.Unlock()
 
 	// Log connection tracking information
-	logger.Infof("Connection tracking: active=%d total=%d", active, total)
+	logger.Infof("Connection Added (addr=%s, active=%d)", remoteAddr, active)
 
 	// Return cleanup function that will be called on defer
 	return func() {
@@ -63,23 +61,21 @@ func (t *Tracker) Track(remoteAddr string) func() {
 	}
 }
 
-func (t *Tracker) AddAttribute(id uint64, key, value string) {
+func (t *Tracker) AddAttribute(id uint64, key, value string) bool {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
 	if metadata, exists := t.metadata[id]; exists {
 		metadata.attributes[key] = value
+		return true
 	}
+
+	return false
 }
 
 // ActiveCount returns the current number of active connections
 func (t *Tracker) ActiveCount() int64 {
 	return t.active.Load()
-}
-
-// TotalCount returns the total number of connections processed
-func (t *Tracker) TotalCount() int64 {
-	return t.totalAccepted.Load()
 }
 
 // WaitForCompletion waits for all tracked connections to complete

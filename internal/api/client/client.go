@@ -1,10 +1,10 @@
 package client
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/urfave/cli"
+	"github.com/zydee3/stockdb/internal/common/logger"
 )
 
 func Init() {
@@ -18,7 +18,7 @@ func Init() {
 	}
 
 	if err := app.Run(os.Args); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
+		logger.Errorf("Error: %s", err.Error())
 		os.Exit(1)
 	}
 }
