@@ -13,6 +13,8 @@ import (
 	"github.com/zydee3/stockdb/internal/api/messages"
 	"github.com/zydee3/stockdb/internal/api/server/handlers"
 	"github.com/zydee3/stockdb/internal/common/utility"
+
+	"github.com/zydee3/stockdb/internal/common/logger"
 )
 
 var requestHandlers = map[messages.CommandType]func(messages.Command) messages.Response{
@@ -38,7 +40,7 @@ func StartServer(socketPath string, ctx context.Context) error {
 
 	defer listener.Close()
 
-	fmt.Printf("StockDB daemon started and listening on %s\n", socketPath)
+	logger.Infof("Socket server started on %s", socketPath)
 
 	return runServer(listener, socketPath, ctx)
 }
@@ -90,7 +92,7 @@ func runServer(listener net.Listener, socketPath string, ctx context.Context) er
 	var err error
 	select {
 	case <-ctx.Done():
-		fmt.Println("server shutdown initiated")
+		logger.Info("daemon shutdown initiated")
 
 		// Cancel the acceptor to stop new connections
 		cancelAccept()
@@ -102,9 +104,9 @@ func runServer(listener net.Listener, socketPath string, ctx context.Context) er
 		// Wait for either drain completion or timeout
 		drainErr := tracker.WaitForCompletion(drainCtx)
 		if drainErr != nil {
-			fmt.Printf("drain failed to complete: %v\n", drainErr)
+			logger.Errorf("drain failed to complete: %v", drainErr)
 		} else {
-			fmt.Println("drain completed successfully")
+			logger.Info("drain completed successfully")
 		}
 
 		// Wait for acceptor to exit and capture any error
@@ -112,7 +114,7 @@ func runServer(listener net.Listener, socketPath string, ctx context.Context) er
 
 	case err = <-acceptDone:
 		// Acceptor exited with error
-		fmt.Printf("Acceptor exited: %v\n", err)
+		logger.Errorf("acceptor exited with error: %s", err.Error())
 	}
 
 	// clean up the socket file

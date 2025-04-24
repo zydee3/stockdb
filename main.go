@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/zydee3/stockdb/internal/common/logging"
+	"github.com/zydee3/stockdb/internal/common/logger"
 )
 
 var (
-	version = ""
+	version   = ""
 	gitCommit = ""
 )
 

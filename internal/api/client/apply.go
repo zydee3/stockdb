@@ -1,4 +1,4 @@
-package apiclient
+package client
 
 import (
 	"encoding/json"
@@ -12,6 +12,8 @@ import (
 
 	"github.com/zydee3/stockdb/internal/api/socket"
 	"github.com/zydee3/stockdb/internal/api/types/crd"
+
+	"github.com/zydee3/stockdb/internal/common/logger"
 )
 
 var applyYamlCommand = cli.Command{
@@ -49,7 +51,7 @@ var applyYamlCommand = cli.Command{
 
 		conn, err := net.Dial("unix", socket.SOCKET_PATH)
 		if err != nil {
-			fmt.Println("Error connecting to socket:", err)
+			logger.Errorf("Error connecting to socket: %s", err.Error())
 			os.Exit(1)
 		}
 		defer conn.Close()
@@ -62,7 +64,7 @@ var applyYamlCommand = cli.Command{
 
 		encoder := json.NewEncoder(conn)
 		if err := encoder.Encode(cmd); err != nil {
-			fmt.Println("Error encoding command:", err)
+			logger.Errorf("Error encoding command: %s", err.Error())
 			return cli.NewExitError(err.Error(), 1)
 		}
 
@@ -71,19 +73,17 @@ var applyYamlCommand = cli.Command{
 
 		decoder := json.NewDecoder(conn)
 		if err := decoder.Decode(&response); err != nil {
-			fmt.Println("Error decoding response:", err)
+			logger.Errorf("Error decoding response: %s", err.Error())
 			os.Exit(1)
 		}
 
-		fmt.Println("Response from server:", response)
+		logger.Info("Response received from server:", response)
 
 		return nil
 	},
 }
 
 func loadYaml(filename string) (*crd.DataCollection, error) {
-	fmt.Println("Applying YAML file:", filename)
-
 	// Read the YAML file
 	yamlData, err := os.ReadFile(filename)
 	if err != nil {

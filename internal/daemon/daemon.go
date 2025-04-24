@@ -13,6 +13,7 @@ import (
 	"github.com/urfave/cli"
 	"github.com/zydee3/stockdb/internal/api/server"
 	"github.com/zydee3/stockdb/internal/api/socket"
+	"github.com/zydee3/stockdb/internal/common/logger"
 )
 
 type Daemon struct {
@@ -34,7 +35,7 @@ func NewDaemon() *Daemon {
 
 func (d *Daemon) Start() error {
 	pid := os.Getpid()
-	fmt.Printf("starting stockd (pid: %d).\n", pid)
+	logger.Infof("Starting Daemon (PID: %d)", pid)
 
 	services := []func(){
 		d.runSocketServer,
@@ -81,13 +82,13 @@ func (d *Daemon) Run() error {
 
 	case err := <-d.errors:
 		// A component reported an error
-		fmt.Printf("Component error: %s\n", err.Error())
+		logger.Errorf("Component error: %s", err.Error())
 		return d.Shutdown(nil)
 	}
 }
 
 func (d *Daemon) Shutdown(sig os.Signal) error {
-	fmt.Printf("Shutting Down (Signal: %v)\n", sig)
+	logger.Infof("Received shutdown signal: %s", sig)
 
 	// Set shutdown deadline - don't wait forever
 	d.shutdownTimer = time.NewTimer(30 * time.Second)
@@ -104,10 +105,10 @@ func (d *Daemon) Shutdown(sig os.Signal) error {
 
 	select {
 	case <-shutdownComplete:
-		fmt.Println("shutdown complete")
+		logger.Info("shutdown complete")
 		d.shutdownTimer.Stop()
 	case <-d.shutdownTimer.C:
-		fmt.Println("shutdown timed out")
+		logger.Error("shutdown timed out")
 		// todo add handling here
 	}
 

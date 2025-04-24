@@ -6,6 +6,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/zydee3/stockdb/internal/common/logger"
 )
 
 type Tracker struct {
@@ -46,7 +48,8 @@ func (t *Tracker) Track(remoteAddr string) func() {
 
 	t.mu.Unlock()
 
-	fmt.Printf("Connection tracking: active=%d total=%d\n", active, total)
+	// Log connection tracking information
+	logger.Infof("Connection tracking: active=%d total=%d", active, total)
 
 	// Return cleanup function that will be called on defer
 	return func() {
@@ -103,7 +106,7 @@ func (t *Tracker) WaitForCompletion(ctx context.Context) error {
 // DrainConnections blocks new connections and waits for existing ones to complete
 // Implements the sidecar readiness probe pattern for Kubernetes graceful termination
 func (t *Tracker) DrainConnections(timeout time.Duration) error {
-	fmt.Printf("draining %d active connections\n", t.active.Load())
+	logger.Infof("draining %d active connections", t.active.Load())
 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
