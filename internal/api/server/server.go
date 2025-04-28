@@ -51,6 +51,9 @@ func createSocketDirectory(socketPath string) error {
 		if err := os.Remove(socketPath); err != nil {
 			return fmt.Errorf("failed to remove socket: %s", err.Error())
 		}
+	} else if !os.IsNotExist(err) {
+		// Some other error occurred that isnt a "file not found" error
+		logger.Error(err.Error())
 	}
 
 	// Create the socket directory if it doesn't exist
