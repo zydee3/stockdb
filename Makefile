@@ -25,7 +25,7 @@ clean:
 $(STOCKDB_OUTPUT_BINARY_NAME):
 	@echo "Building $(STOCKDB_OUTPUT_BINARY_NAME)"
 	@mkdir -p $(BUILD_DIRECTORY)
-	@go build $(GOLANG_BUILD_FLAGS) -o $(BUILD_DIRECTORY)/$(STOCKDB_OUTPUT_BINARY_NAME) -ldflags "$(LDFLAGS_COMMON)" cmd/stockdb/main.go
+	@go build $(GOLANG_BUILD_FLAGS) -o $(BUILD_DIRECTORY)/$(STOCKDB_OUTPUT_BINARY_NAME) -ldflags "$(LDFLAGS_COMMON)" cmd/stockd/main.go
 
 # Build stockctl CLI tool
 .PHONY: $(STOCKCTL_OUTPUT_BINARY_NAME)
