@@ -2,11 +2,12 @@ package common
 
 import (
 	"bytes"
-	common2 "github.com/zydee3/stockdb/api/common"
 	"io"
 	"net/http"
 	"testing"
 	"time"
+
+	common2 "github.com/zydee3/stockdb/internal/api/utility"
 )
 
 type MockRoundTripper struct {
