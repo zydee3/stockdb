@@ -46,8 +46,14 @@ func StartServer(socketPath string, ctx context.Context) error {
 
 func createSocketDirectory(socketPath string) error {
 	// Delete the socket file if it exists
-	if err := os.Remove(socketPath); err != nil {
-		return fmt.Errorf("failed to remove socket: %s", err.Error())
+	if _, err := os.Stat(socketPath); err == nil {
+		// File exists, try to remove it
+		if err := os.Remove(socketPath); err != nil {
+			return fmt.Errorf("failed to remove socket: %s", err.Error())
+		}
+	} else if !os.IsNotExist(err) {
+		// Some other error occurred that isnt a "file not found" error
+		logger.Error(err.Error())
 	}
 
 	// Create the socket directory if it doesn't exist
