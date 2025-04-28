@@ -1,5 +1,5 @@
 package socket
 
 const (
-	SOCKET_PATH = "/var/run/stockdb.sock"
+	SocketPath = "/var/run/stockdb.sock"
 )

@@ -73,15 +73,15 @@ func (t *Tracker) AddAttribute(id uint64, key, value string) bool {
 	return false
 }
 
-// ActiveCount returns the current number of active connections
+// ActiveCount returns the current number of active connections.
 func (t *Tracker) ActiveCount() int64 {
 	return t.active.Load()
 }
 
 // WaitForCompletion waits for all tracked connections to complete
-// Context allows for cancellation or timeout of the wait operation
+// Context allows for cancellation or timeout of the wait operation.
 func (t *Tracker) WaitForCompletion(ctx context.Context) error {
-	// Create a channel that will be closed when all connections are done
+	// Create a channel that will be closed when all connections are done.
 	done := make(chan struct{})
 
 	go func() {
@@ -89,7 +89,7 @@ func (t *Tracker) WaitForCompletion(ctx context.Context) error {
 		close(done)
 	}()
 
-	// Wait for either completion or context cancellation
+	// Wait for either completion or context cancellation.
 	select {
 	case <-done:
 		return nil
@@ -99,8 +99,9 @@ func (t *Tracker) WaitForCompletion(ctx context.Context) error {
 	}
 }
 
-// DrainConnections blocks new connections and waits for existing ones to complete
-// Implements the sidecar readiness probe pattern for Kubernetes graceful termination
+// DrainConnections blocks new connections and waits for existing ones to
+// complete Implements the sidecar readiness probe pattern for Kubernetes
+// graceful termination.
 func (t *Tracker) DrainConnections(timeout time.Duration) error {
 	logger.Infof("draining %d active connections", t.active.Load())
 

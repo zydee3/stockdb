@@ -1,6 +1,7 @@
 package fmp
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -9,12 +10,12 @@ import (
 )
 
 type HTTPClient struct {
-	HttpClient httpUtil.HTTPClient
-	ApiKey     string
+	client httpUtil.HTTPClient
+	apiKey string
 }
 
 const (
-	fmpUrl = "https://financialmodelingprep.com/stable"
+	fmpURL = "https://financialmodelingprep.com/stable"
 )
 
 func (h *HTTPClient) Get(endpoint string, data map[string]string) (*http.Response, error) {
@@ -22,7 +23,7 @@ func (h *HTTPClient) Get(endpoint string, data map[string]string) (*http.Respons
 		data = map[string]string{}
 	}
 
-	data["api_key"] = h.ApiKey
+	data["api_key"] = h.apiKey
 
 	var dataStringBuilder strings.Builder
 	for key, value := range data {
@@ -32,7 +33,9 @@ func (h *HTTPClient) Get(endpoint string, data map[string]string) (*http.Respons
 		dataStringBuilder.WriteString("&")
 	}
 
-	endpoint = fmt.Sprintf("%s/%s?%s", fmpUrl, endpoint, dataStringBuilder.String())
+	endpoint = fmt.Sprintf("%s/%s?%s", fmpURL, endpoint, dataStringBuilder.String())
 
-	return h.HttpClient.Get(endpoint)
+	ctx := context.Background()
+
+	return h.client.Get(ctx, endpoint)
 }

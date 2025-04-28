@@ -5,6 +5,7 @@ import (
 	"github.com/zydee3/stockdb/internal/unix/client"
 )
 
+//nolint:gochecknoglobals // gochecknoglobals
 var (
 	version   = ""
 	gitCommit = ""

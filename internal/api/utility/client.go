@@ -1,6 +1,7 @@
 package utility
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"time"
@@ -29,8 +30,8 @@ func (h *HTTPClient) Do(request *http.Request) (*http.Response, error) {
 	return response, err
 }
 
-func (h *HTTPClient) Get(url string) (*http.Response, error) {
-	request, err := http.NewRequest("GET", url, nil)
+func (h *HTTPClient) Get(ctx context.Context, url string) (*http.Response, error) {
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -38,18 +39,8 @@ func (h *HTTPClient) Get(url string) (*http.Response, error) {
 	return h.Do(request)
 }
 
-func (h *HTTPClient) Post(url string, contentType string, body io.Reader) (*http.Response, error) {
-	request, err := http.NewRequest("POST", url, body)
-	if err != nil {
-		return nil, err
-	}
-
-	request.Header.Set("Content-Type", contentType)
-	return h.Do(request)
-}
-
-func (h *HTTPClient) Put(url string, contentType string, body io.Reader) (*http.Response, error) {
-	request, err := http.NewRequest("PUT", url, body)
+func (h *HTTPClient) Post(ctx context.Context, url string, contentType string, body io.Reader) (*http.Response, error) {
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, url, body)
 	if err != nil {
 		return nil, err
 	}
@@ -58,8 +49,23 @@ func (h *HTTPClient) Put(url string, contentType string, body io.Reader) (*http.
 	return h.Do(request)
 }
 
-func (h *HTTPClient) Patch(url string, contentType string, body io.Reader) (*http.Response, error) {
-	request, err := http.NewRequest("PATCH", url, body)
+func (h *HTTPClient) Put(ctx context.Context, url string, contentType string, body io.Reader) (*http.Response, error) {
+	request, err := http.NewRequestWithContext(ctx, http.MethodPut, url, body)
+	if err != nil {
+		return nil, err
+	}
+
+	request.Header.Set("Content-Type", contentType)
+	return h.Do(request)
+}
+
+func (h *HTTPClient) Patch(
+	ctx context.Context,
+	url string,
+	contentType string,
+	body io.Reader,
+) (*http.Response, error) {
+	request, err := http.NewRequestWithContext(ctx, http.MethodPatch, url, body)
 	if err != nil {
 		return nil, err
 	}
@@ -67,8 +73,8 @@ func (h *HTTPClient) Patch(url string, contentType string, body io.Reader) (*htt
 	return h.Do(request)
 }
 
-func (h *HTTPClient) Delete(url string) (*http.Response, error) {
-	request, err := http.NewRequest("DELETE", url, nil)
+func (h *HTTPClient) Delete(ctx context.Context, url string) (*http.Response, error) {
+	request, err := http.NewRequestWithContext(ctx, http.MethodDelete, url, nil)
 	if err != nil {
 		return nil, err
 	}
