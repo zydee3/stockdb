@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/urfave/cli"
-	"github.com/zydee3/stockdb/internal/api/messages"
-	"github.com/zydee3/stockdb/internal/api/server/handlers"
 	"github.com/zydee3/stockdb/internal/common/utility"
+	"github.com/zydee3/stockdb/internal/unix/messages"
+	"github.com/zydee3/stockdb/internal/unix/server/handlers"
 
 	"github.com/zydee3/stockdb/internal/common/logger"
 )
