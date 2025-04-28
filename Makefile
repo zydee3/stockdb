@@ -12,7 +12,7 @@ LDFLAGS_COMMON := -X main.gitCommit=$(GIT_COMMIT) -X main.version=$(VERSION)
 
 # Default target
 .PHONY: all
-all: $(STOCKDB_OUTPUT_BINARY_NAME) $(STOCKCTL_OUTPUT_BINARY_NAME)
+all: build lint test
 
 # Clean target
 .PHONY: clean
@@ -49,8 +49,7 @@ verify-vendor: vendor
 
 # Build target
 .PHONY: build
-build: clean
-	@echo "Building $(OUTPUT_BINARY_NAME)"
+build: $(STOCKDB_OUTPUT_BINARY_NAME) $(STOCKCTL_OUTPUT_BINARY_NAME)
 
 # Run stockdb
 .PHONY: run-$(STOCKDB_OUTPUT_BINARY_NAME)
