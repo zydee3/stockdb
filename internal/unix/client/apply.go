@@ -7,11 +7,11 @@ import (
 	"os"
 
 	"github.com/urfave/cli"
-	"github.com/zydee3/stockdb/internal/api/messages"
+	"github.com/zydee3/stockdb/internal/unix/messages"
 	"gopkg.in/yaml.v3"
 
-	"github.com/zydee3/stockdb/internal/api/socket"
-	"github.com/zydee3/stockdb/internal/api/types/crd"
+	"github.com/zydee3/stockdb/internal/unix/socket"
+	"github.com/zydee3/stockdb/internal/unix/types/crd"
 
 	"github.com/zydee3/stockdb/internal/common/logger"
 )

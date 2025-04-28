@@ -3,7 +3,7 @@ package handlers
 import (
 	"fmt"
 
-	"github.com/zydee3/stockdb/internal/api/messages"
+	"github.com/zydee3/stockdb/internal/unix/messages"
 )
 
 func OnApplyRequest(cmd messages.Command) messages.Response {

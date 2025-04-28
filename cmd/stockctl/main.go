@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/zydee3/stockdb/internal/api/client"
 	"github.com/zydee3/stockdb/internal/common/logger"
+	"github.com/zydee3/stockdb/internal/unix/client"
 )
 
 var (

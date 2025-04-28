@@ -2,13 +2,14 @@ package fmp
 
 import (
 	"fmt"
-	"github.com/zydee3/stockdb/api/common"
 	"net/http"
 	"strings"
+
+	httpUtil "github.com/zydee3/stockdb/internal/api/utility"
 )
 
 type HTTPClient struct {
-	HttpClient common.HTTPClient
+	HttpClient httpUtil.HTTPClient
 	ApiKey     string
 }
 
