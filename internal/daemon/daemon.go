@@ -1,17 +1,18 @@
 package daemon
 
 import (
+	"context"
 	"fmt"
 	"os"
-
-	"context"
 	"os/signal"
 	"sync"
 	"syscall"
 	"time"
 
 	"github.com/urfave/cli"
+
 	"github.com/zydee3/stockdb/internal/common/logger"
+	daemonConfig "github.com/zydee3/stockdb/internal/config"
 	"github.com/zydee3/stockdb/internal/unix/server"
 	"github.com/zydee3/stockdb/internal/unix/socket"
 )
@@ -25,11 +26,14 @@ type Daemon struct {
 }
 
 func NewDaemon() *Daemon {
+	const (
+		errorChannelSize = 10
+	)
 	ctx, cancel := context.WithCancel(context.Background())
 	return &Daemon{
 		ctx:        ctx,
 		cancelFunc: cancel,
-		errors:     make(chan error, 10), // Buffer for component errors
+		errors:     make(chan error, errorChannelSize), // Buffer for component errors
 	}
 }
 
@@ -51,14 +55,14 @@ func (d *Daemon) Start() error {
 	return nil
 }
 
-// runSocketServer launches the socket API server as a managed component
+// runSocketServer launches the socket API server as a managed component.
 func (d *Daemon) runSocketServer() {
 	defer d.serviceGroup.Done()
 
-	err := server.StartServer(socket.SOCKET_PATH, d.ctx)
+	err := server.StartServer(d.ctx, socket.SocketPath)
 
 	// If the context is cancelled, it means the daemon is shutting down
-	// and we don't want to report that as an error
+	// and we don't want to report that as an error.
 	if err != nil && d.ctx.Err() == nil {
 		d.errors <- fmt.Errorf("socket server error: %w", err)
 	}
@@ -83,14 +87,14 @@ func (d *Daemon) Run() error {
 
 	case err := <-d.errors:
 		// A component reported an error
-		logger.Errorf("Component error: %s", err.Error())
+		logger.Error("%w", err)
 		return d.Shutdown()
 	}
 }
 
 func (d *Daemon) Shutdown() error {
 	// Set shutdown deadline - don't wait forever
-	d.shutdownTimer = time.NewTimer(30 * time.Second)
+	d.shutdownTimer = time.NewTimer(daemonConfig.DaemonShutdownTimeout)
 
 	// Cancel context to signal all services to stop
 	d.cancelFunc()
@@ -120,17 +124,17 @@ func Init() {
 	app.Usage = "Daemon for StockDB"
 	app.Version = "0.1.0"
 
-	app.Action = func(c *cli.Context) error {
+	app.Action = func(_ *cli.Context) error {
 		d := NewDaemon()
 		if err := d.Run(); err != nil {
-			return cli.NewExitError(err.Error(), 1)
+			return cli.NewExitError(err, 1)
 		}
 
 		return nil
 	}
 
 	if err := app.Run(os.Args); err != nil {
-		logger.Errorf("Error: %s", err.Error())
+		logger.Error("%w", err)
 		os.Exit(1)
 	}
 }

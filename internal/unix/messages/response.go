@@ -8,8 +8,10 @@ const (
 	ResponseTypeUnknown ResponseType = "unknown"
 )
 
-func (t ResponseType) String() string {
-	return string(t)
+type Response struct {
+	Type    ResponseType `json:"type"`
+	Message string       `json:"message,omitempty"`
+	Data    any          `json:"data,omitempty"`
 }
 
 func NewResponseType(s string) ResponseType {
@@ -23,8 +25,6 @@ func NewResponseType(s string) ResponseType {
 	}
 }
 
-type Response struct {
-	Type    ResponseType `json:"type"`
-	Message string       `json:"message,omitempty"`
-	Data    any          `json:"data,omitempty"`
+func (t ResponseType) String() string {
+	return string(t)
 }

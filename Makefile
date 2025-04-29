@@ -13,7 +13,7 @@ LDFLAGS_COMMON := -X main.gitCommit=$(GIT_COMMIT) -X main.version=$(VERSION)
 
 # Default target
 .PHONY: all
-all: $(STOCKDB_OUTPUT_BINARY_NAME) $(STOCKCTL_OUTPUT_BINARY_NAME)
+all: build lint test
 
 # Clean target
 .PHONY: clean
@@ -26,7 +26,7 @@ clean:
 $(STOCKDB_OUTPUT_BINARY_NAME):
 	@echo "Building $(STOCKDB_OUTPUT_BINARY_NAME)"
 	@mkdir -p $(BUILD_DIRECTORY)
-	@go build $(GOLANG_BUILD_FLAGS) -o $(BUILD_DIRECTORY)/$(STOCKDB_OUTPUT_BINARY_NAME) -ldflags "$(LDFLAGS_COMMON)" cmd/stockdb/main.go
+	@go build $(GOLANG_BUILD_FLAGS) -o $(BUILD_DIRECTORY)/$(STOCKDB_OUTPUT_BINARY_NAME) -ldflags "$(LDFLAGS_COMMON)" cmd/stockd/main.go
 
 # Build stockctl CLI tool
 .PHONY: $(STOCKCTL_OUTPUT_BINARY_NAME)
@@ -50,8 +50,7 @@ verify-vendor: vendor
 
 # Build target
 .PHONY: build
-build: clean
-	@echo "Building $(OUTPUT_BINARY_NAME)"
+build: $(STOCKDB_OUTPUT_BINARY_NAME) $(STOCKCTL_OUTPUT_BINARY_NAME)
 
 # Run stockdb
 .PHONY: run-$(STOCKDB_OUTPUT_BINARY_NAME)

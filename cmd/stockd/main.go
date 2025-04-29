@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/zydee3/stockdb/internal/common/logger"
-	"github.com/zydee3/stockdb/internal/unix/client"
+	"github.com/zydee3/stockdb/internal/daemon"
 )
 
 //nolint:gochecknoglobals // gochecknoglobals
@@ -15,5 +15,5 @@ func main() {
 	logger.SetupLogger()
 	logger.Infof("Starting StockDB. Version: %s. Commit: %s.", version, gitCommit)
 
-	client.Init()
+	daemon.Init()
 }
