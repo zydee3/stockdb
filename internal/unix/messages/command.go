@@ -7,8 +7,10 @@ const (
 	CommandTypeUnknown CommandType = "unknown"
 )
 
-func (t CommandType) String() string {
-	return string(t)
+type Command struct {
+	Type       CommandType       `json:"type"`
+	Parameters map[string]string `json:"parameters"`
+	Data       any               `json:"data,omitempty"`
 }
 
 func NewCommandType(s string) CommandType {
@@ -20,8 +22,6 @@ func NewCommandType(s string) CommandType {
 	}
 }
 
-type Command struct {
-	Type       CommandType       `json:"type"`
-	Parameters map[string]string `json:"parameters"`
-	Data       any               `json:"data,omitempty"`
+func (t CommandType) String() string {
+	return string(t)
 }

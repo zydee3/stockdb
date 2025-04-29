@@ -1,7 +1,8 @@
-package common
+package common_test
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/http"
 	"testing"
@@ -32,7 +33,7 @@ func (m *MultiMockRoundTripper) RoundTrip(rq *http.Request) (*http.Response, err
 func TestHttpClient(t *testing.T) {
 	t.Run("Test Basic Request", func(t *testing.T) {
 		mock := &MockRoundTripper{Resp: &http.Response{
-			StatusCode: 200,
+			StatusCode: http.StatusOK,
 			Body:       io.NopCloser(bytes.NewBufferString(`OK`)),
 		}}
 
@@ -42,12 +43,14 @@ func TestHttpClient(t *testing.T) {
 			RetryWaitTime: time.Millisecond * 500,
 		}
 
-		get, err := client.Get("test.com")
+		ctx := context.Background()
+
+		get, err := client.Get(ctx, "test.com")
 		if err != nil {
 			t.Errorf("Error while calling test.com: %v", err)
 		}
 
-		if get.StatusCode != 200 {
+		if get.StatusCode != http.StatusOK {
 			t.Errorf("Invalid status code: %d", get.StatusCode)
 		}
 
