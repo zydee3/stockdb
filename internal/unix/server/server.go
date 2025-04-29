@@ -45,11 +45,11 @@ func createSocketDirectory(socketPath string) error {
 	if _, err := os.Stat(socketPath); err == nil {
 		// File exists, try to remove it
 		if removeError := os.Remove(socketPath); removeError != nil {
-			return fmt.Errorf("failed to remove socket: %s", removeError.Error())
+			return fmt.Errorf("%w", removeError)
 		}
 	} else if !os.IsNotExist(err) {
 		// Some other error occurred that isnt a "file not found" error
-		logger.Error(err.Error())
+		logger.Error("%w", err)
 	}
 
 	// Create the socket directory if it doesn't exist
@@ -57,7 +57,7 @@ func createSocketDirectory(socketPath string) error {
 		socketDirPerm = 0755
 	)
 	if err := utility.CreateParentDir(socketPath, socketDirPerm); err != nil {
-		return cli.NewExitError(err.Error(), 1)
+		return cli.NewExitError(err, 1)
 	}
 
 	return nil
@@ -66,18 +66,19 @@ func createSocketDirectory(socketPath string) error {
 func createSocketListener(socketPath string) (net.Listener, error) {
 	listener, err := net.Listen("unix", socketPath)
 	if err != nil {
-		return nil, cli.NewExitError(fmt.Sprintf("failed to create unix socket: %s", err.Error()), 1)
+		return nil, cli.NewExitError(err, 1)
 	}
 
 	// Set the socket permissions
 	//nolint:gosec // Both ends are reading and writing to the socket
 	if chmodError := os.Chmod(socketPath, 0660); chmodError != nil {
 		if unixCloseError := listener.Close(); unixCloseError != nil {
-			logger.Errorf("failed to close socket: %v", unixCloseError)
+			logger.Warn("%w", unixCloseError)
+			logger.Error("%w", unixCloseError)
 		}
 
 		// Remove the socket file
-		return nil, cli.NewExitError(fmt.Sprintf("failed to set socket permissions: %s", chmodError.Error()), 1)
+		return nil, cli.NewExitError(chmodError, 1)
 	}
 
 	return listener, nil
@@ -117,7 +118,7 @@ func runServer(ctx context.Context, listener net.Listener, socketPath string) er
 		// Wait for either drain completion or timeout
 		drainErr := tracker.WaitForCompletion(drainCtx)
 		if drainErr != nil {
-			logger.Errorf("drain failed to complete: %v", drainErr)
+			logger.Error("%w", drainErr)
 		} else {
 			logger.Info("drain completed successfully")
 		}
@@ -127,7 +128,7 @@ func runServer(ctx context.Context, listener net.Listener, socketPath string) er
 
 	case err = <-acceptDone:
 		// Acceptor exited with error
-		logger.Errorf("acceptor exited with error: %s", err.Error())
+		logger.Error("%w", err)
 	}
 
 	// clean up the socket file
@@ -171,7 +172,7 @@ func acceptConnections(ctx context.Context, listener net.Listener, tracker *Trac
 			}
 
 			// Otherwise, log the errors and continue accepting connections
-			logger.Errorf("Error accepting connection: %s", err.Error())
+			logger.Error("%w", err)
 		}
 	}
 }
@@ -192,7 +193,7 @@ func handleConnection(connection net.Conn, tracker *Tracker) {
 
 	cmd, err := parseCommand(connection)
 	if err != nil {
-		logger.Errorf("Error parsing command: %s", err.Error())
+		logger.Error("%w", err)
 		sendErrorResponse(connection, "failed to decode command")
 		return
 	}
@@ -203,7 +204,7 @@ func handleConnection(connection net.Conn, tracker *Tracker) {
 
 	// Send response back to client
 	if respError := sendResponse(connection, response); respError != nil {
-		logger.Errorf("Error sending response: %s", respError.Error())
+		logger.Error("%w", respError)
 	}
 }
 
@@ -226,13 +227,13 @@ func sendErrorResponse(connection net.Conn, message string) {
 	}
 
 	if err := sendResponse(connection, response); err != nil {
-		logger.Errorf("Error sending error response: %s", err.Error())
+		logger.Error("%w", err)
 	}
 }
 
 func cleanupSocket(socketPath string) error {
 	if err := os.RemoveAll(socketPath); err != nil {
-		logger.Errorf("Failed to remove socket directory: %v", err)
+		logger.Error("%w", err)
 		return err
 	}
 

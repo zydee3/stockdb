@@ -12,6 +12,7 @@ import (
 	"github.com/urfave/cli"
 
 	"github.com/zydee3/stockdb/internal/common/logger"
+	daemonConfig "github.com/zydee3/stockdb/internal/config"
 	"github.com/zydee3/stockdb/internal/unix/server"
 	"github.com/zydee3/stockdb/internal/unix/socket"
 )
@@ -86,18 +87,14 @@ func (d *Daemon) Run() error {
 
 	case err := <-d.errors:
 		// A component reported an error
-		logger.Errorf("Component error: %s", err.Error())
+		logger.Error("%w", err)
 		return d.Shutdown()
 	}
 }
 
 func (d *Daemon) Shutdown() error {
-	const (
-		shutdownTimeout = 30 * time.Second
-	)
-
 	// Set shutdown deadline - don't wait forever
-	d.shutdownTimer = time.NewTimer(shutdownTimeout)
+	d.shutdownTimer = time.NewTimer(daemonConfig.DaemonShutdownTimeout)
 
 	// Cancel context to signal all services to stop
 	d.cancelFunc()
@@ -130,14 +127,14 @@ func Init() {
 	app.Action = func(_ *cli.Context) error {
 		d := NewDaemon()
 		if err := d.Run(); err != nil {
-			return cli.NewExitError(err.Error(), 1)
+			return cli.NewExitError(err, 1)
 		}
 
 		return nil
 	}
 
 	if err := app.Run(os.Args); err != nil {
-		logger.Errorf("Error: %s", err.Error())
+		logger.Error("%w", err)
 		os.Exit(1)
 	}
 }

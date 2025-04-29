@@ -24,25 +24,25 @@ var applyYamlCommand = cli.Command{
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "file, f",
-			Usage: "Path to the YAML file",
+			Usage: "(-f <yaml-file>)",
 		},
 	},
 	Before: onBefore,
 	Action: onAction,
 }
 
-func loadYaml(filename string) (*crd.DataCollection, error) {
+func loadDataCollectionYaml(filename string) (*crd.DataCollection, error) {
 	// Read the YAML file
 	yamlData, err := os.ReadFile(filename)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read file: %s", err.Error())
+		return nil, err
 	}
 
 	dataCollection := &crd.DataCollection{}
 
 	// Unmarshal the YAML data into our DataCollection struct
 	if unmarshalError := yaml.Unmarshal(yamlData, dataCollection); unmarshalError != nil {
-		return nil, fmt.Errorf("failed to unmarshal YAML: %s", unmarshalError.Error())
+		return nil, unmarshalError
 	}
 
 	return dataCollection, nil
@@ -66,14 +66,14 @@ func onBefore(c *cli.Context) error {
 func onAction(c *cli.Context) error {
 	filename := c.String("file")
 
-	crd, err := loadYaml(filename)
+	crd, err := loadDataCollectionYaml(filename)
 	if err != nil {
-		return cli.NewExitError(err.Error(), 1)
+		return cli.NewExitError(err, 1)
 	}
 
 	conn, err := net.Dial("unix", socket.SocketPath)
 	if err != nil {
-		return cli.NewExitError(fmt.Sprintf("failed to connect to socket: %s", err.Error()), 1)
+		return cli.NewExitError(err, 1)
 	}
 
 	defer conn.Close()
@@ -86,8 +86,8 @@ func onAction(c *cli.Context) error {
 
 	encoder := json.NewEncoder(conn)
 	if encodeError := encoder.Encode(cmd); encodeError != nil {
-		logger.Errorf("Error encoding command: %s", encodeError.Error())
-		return cli.NewExitError(encodeError.Error(), 1)
+		logger.Error("%w", encodeError)
+		return cli.NewExitError(encodeError, 1)
 	}
 
 	// Receive and parse response
@@ -95,7 +95,7 @@ func onAction(c *cli.Context) error {
 
 	decoder := json.NewDecoder(conn)
 	if decodeError := decoder.Decode(&response); decodeError != nil {
-		return cli.NewExitError(fmt.Sprintf("failed to decode response: %s", decodeError.Error()), 1)
+		return cli.NewExitError(decodeError, 1)
 	}
 
 	logger.Info("Response received from server:", response)
