@@ -24,8 +24,8 @@ func (u *unifiedJobQueue) GetOutputChannel() (<-chan JobDefinition, error) {
 	return u.jobQueueChannel, nil
 }
 
-func NewUnifiedJobQueue() FullJobQueue {
+func NewUnifiedJobQueue(size uint) FullJobQueue {
 	return &unifiedJobQueue{
-		jobQueueChannel: make(chan JobDefinition),
+		jobQueueChannel: make(chan JobDefinition, size),
 	}
 }

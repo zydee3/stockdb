@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-var logger *slog.Logger
+var logger *slog.Logger = slog.Default()
 
 func SetupLogger() {
 	// TODO: Load logging info from config file and cli options
