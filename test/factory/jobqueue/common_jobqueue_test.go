@@ -61,6 +61,10 @@ func testAddSucceeds(t *testing.T, q jobqueue.InputJobQueue) {
 func testAddHonorsCancel(t *testing.T, q jobqueue.InputJobQueue) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
+	select {
+	case <-ctx.Done():
+	}
+
 	err := q.Add(ctx, testJobDefinition())
 	if err == nil {
 		t.Fatal("expected error due to canceled context, got nil")
