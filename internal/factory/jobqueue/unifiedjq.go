@@ -10,6 +10,10 @@ type unifiedJobQueue struct {
 }
 
 func (u *unifiedJobQueue) Add(context context.Context, jobDefinition JobDefinition) error {
+	if context.Err() != nil {
+		return context.Err()
+	}
+
 	select {
 	case u.jobQueueChannel <- jobDefinition:
 		return nil
