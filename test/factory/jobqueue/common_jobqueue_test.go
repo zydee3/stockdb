@@ -3,6 +3,7 @@ package jobqueue
 import (
 	"context"
 	"golang.org/x/time/rate"
+	"sync"
 	"testing"
 	"time"
 
@@ -78,6 +79,98 @@ func testGetOutputChannelSucceeds(t *testing.T, q jobqueue.OutputJobQueue) {
 	}
 }
 
+func testFullJobQueueConcurrentAdds(t *testing.T, q jobqueue.FullJobQueue) {
+	outCh, err := q.GetOutputChannel()
+	if err != nil {
+		t.Fatalf("GetOutputChannel returned error: %v", err)
+	}
+
+	const numProducers = 10
+	var wg sync.WaitGroup
+	wg.Add(numProducers)
+
+	for i := 0; i < numProducers; i++ {
+		job := testJobDefinition()
+		go func(j jobqueue.JobDefinition) {
+			defer wg.Done()
+			err := q.Add(context.Background(), j)
+			if err != nil {
+				t.Errorf("Add returned error for job %v: %v", j, err)
+			}
+		}(job)
+	}
+
+	// TODO: Get unique identifier of job to compare inputs end up matching outputs.
+	received := 0
+	for i := 0; i < numProducers; i++ {
+		select {
+		case _ = <-outCh:
+			received++
+		case <-time.After(2 * time.Second):
+			t.Fatalf("Timed out waiting to receive job")
+		}
+	}
+
+	wg.Wait()
+
+	if received != numProducers {
+		t.Errorf("Expected %d jobs, but received %d", numProducers, received)
+	}
+}
+
+func testFullJobQueueMultipleOutputChannel(t *testing.T, q jobqueue.FullJobQueue) {
+	const numElements = 20
+
+	outCh1, err1 := q.GetOutputChannel()
+	outCh2, err2 := q.GetOutputChannel()
+	if err1 != nil || err2 != nil {
+		t.Fatalf("GetOutputChannel returned an error (err1=%v, err2=%v)", err1, err2)
+	}
+	if outCh1 == nil || outCh2 == nil {
+		t.Fatal("Output channel is nil")
+	}
+	if outCh1 != outCh2 {
+		t.Errorf("GetOutputChannel returned different channels on successive calls")
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	recvCount := 0
+	var mu sync.Mutex
+	consume := func(ch <-chan jobqueue.JobDefinition) {
+		defer wg.Done()
+		for {
+			select {
+			case _, ok := <-ch:
+				if !ok {
+					return
+				}
+				mu.Lock()
+				recvCount++
+				mu.Unlock()
+			case <-time.After(100 * time.Millisecond):
+				// If no new job arrives for a while, assume no more jobs and stop.
+				return
+			}
+		}
+	}
+	go consume(outCh1)
+	go consume(outCh2)
+
+	for i := 0; i < numElements; i++ {
+		job := testJobDefinition()
+		if err := q.Add(context.Background(), job); err != nil {
+			t.Errorf("Unexpected error on Add(%v): %v", job, err)
+		}
+	}
+
+	wg.Wait()
+
+	if recvCount != numElements {
+		t.Errorf("Expected %d jobs, but received %d", numElements, recvCount)
+	}
+}
+
 func TestInputJobQueueImplementations(t *testing.T) {
 	for _, impl := range inputImplementations {
 		t.Run(impl.name+"/AddSucceeds", func(t *testing.T) {
@@ -107,6 +200,12 @@ func TestFullJobQueueImplementations(t *testing.T) {
 		})
 		t.Run(impl.name+"/GetOutputChannel", func(t *testing.T) {
 			testGetOutputChannelSucceeds(t, impl.newQ())
+		})
+		t.Run(impl.name+"/ConcurrentAdds", func(t *testing.T) {
+			testFullJobQueueConcurrentAdds(t, impl.newQ())
+		})
+		t.Run(impl.name+"/ConcurrentReads", func(t *testing.T) {
+			testFullJobQueueMultipleOutputChannel(t, impl.newQ())
 		})
 	}
 }
