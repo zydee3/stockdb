@@ -1,11 +1,12 @@
-package jobqueue
+package jobqueue_test
 
 import (
 	"context"
-	"golang.org/x/time/rate"
 	"sync"
 	"testing"
 	"time"
+
+	"golang.org/x/time/rate"
 
 	"github.com/zydee3/stockdb/internal/factory/jobqueue"
 )
@@ -25,25 +26,65 @@ type fullFactory struct {
 	newQ func() jobqueue.FullJobQueue
 }
 
-var inputImplementations = []inputFactory{
-	{
-		name: "RateLimitJobQueue",
-		newQ: func() jobqueue.InputJobQueue {
-			return jobqueue.NewRateLimitedInputJobQueue(
-				jobqueue.NewUnifiedJobQueue(10),
-				rate.NewLimiter(rate.Every(1*time.Second), 10),
-			)
+func TestInputJobQueueImplementations(t *testing.T) {
+	var inputImplementations = []inputFactory{
+		{
+			name: "RateLimitJobQueue",
+			newQ: func() jobqueue.InputJobQueue {
+				return jobqueue.NewRateLimitedInputJobQueue(
+					jobqueue.NewUnifiedJobQueue(10),
+					rate.NewLimiter(rate.Every(1*time.Second), 10),
+				)
+			},
 		},
-	},
+	}
+
+	for _, impl := range inputImplementations {
+		t.Run(impl.name+"/AddSucceeds", func(t *testing.T) {
+			testAddSucceeds(t, impl.newQ())
+		})
+		t.Run(impl.name+"/AddHonorsCancel", func(t *testing.T) {
+			testAddHonorsCancel(t, impl.newQ())
+		})
+	}
 }
 
-var outputImplementations []outputFactory
+func TestOutputJobQueueImplementations(t *testing.T) {
+	var outputImplementations []outputFactory
 
-var fullImplementations = []fullFactory{
-	{
-		name: "UnifiedJobQueue",
-		newQ: func() jobqueue.FullJobQueue { return jobqueue.NewUnifiedJobQueue(10) },
-	},
+	//nolint:govet // Ignore output implementations is empty until an output implementation is added.
+	for _, impl := range outputImplementations {
+		t.Run(impl.name+"/GetOutputChannel", func(t *testing.T) {
+			testGetOutputChannelSucceeds(t, impl.newQ())
+		})
+	}
+}
+
+func TestFullJobQueueImplementations(t *testing.T) {
+	var fullImplementations = []fullFactory{
+		{
+			name: "UnifiedJobQueue",
+			newQ: func() jobqueue.FullJobQueue { return jobqueue.NewUnifiedJobQueue(10) },
+		},
+	}
+
+	for _, impl := range fullImplementations {
+		t.Run(impl.name+"/AddSucceeds", func(t *testing.T) {
+			testAddSucceeds(t, impl.newQ())
+		})
+		t.Run(impl.name+"/AddHonorsCancel", func(t *testing.T) {
+			testAddHonorsCancel(t, impl.newQ())
+		})
+		t.Run(impl.name+"/GetOutputChannel", func(t *testing.T) {
+			testGetOutputChannelSucceeds(t, impl.newQ())
+		})
+		t.Run(impl.name+"/ConcurrentAdds", func(t *testing.T) {
+			testFullJobQueueConcurrentAdds(t, impl.newQ())
+		})
+		t.Run(impl.name+"/ConcurrentReads", func(t *testing.T) {
+			testFullJobQueueMultipleOutputChannel(t, impl.newQ())
+		})
+	}
 }
 
 func testJobDefinition() jobqueue.JobDefinition {
@@ -62,9 +103,7 @@ func testAddSucceeds(t *testing.T, q jobqueue.InputJobQueue) {
 func testAddHonorsCancel(t *testing.T, q jobqueue.InputJobQueue) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	select {
-	case <-ctx.Done():
-	}
+	<-ctx.Done()
 
 	err := q.Add(ctx, testJobDefinition())
 	if err == nil {
@@ -89,22 +128,22 @@ func testFullJobQueueConcurrentAdds(t *testing.T, q jobqueue.FullJobQueue) {
 	var wg sync.WaitGroup
 	wg.Add(numProducers)
 
-	for i := 0; i < numProducers; i++ {
+	for range numProducers {
 		job := testJobDefinition()
 		go func(j jobqueue.JobDefinition) {
 			defer wg.Done()
-			err := q.Add(context.Background(), j)
-			if err != nil {
-				t.Errorf("Add returned error for job %v: %v", j, err)
+			addErr := q.Add(context.Background(), j)
+			if addErr != nil {
+				t.Errorf("Add returned error for job %v: %v", j, addErr)
 			}
 		}(job)
 	}
 
 	// TODO: Get unique identifier of job to compare inputs end up matching outputs.
 	received := 0
-	for i := 0; i < numProducers; i++ {
+	for range numProducers {
 		select {
-		case _ = <-outCh:
+		case <-outCh:
 			received++
 		case <-time.After(2 * time.Second):
 			t.Fatalf("Timed out waiting to receive job")
@@ -157,7 +196,7 @@ func testFullJobQueueMultipleOutputChannel(t *testing.T, q jobqueue.FullJobQueue
 	go consume(outCh1)
 	go consume(outCh2)
 
-	for i := 0; i < numElements; i++ {
+	for range numElements {
 		job := testJobDefinition()
 		if err := q.Add(context.Background(), job); err != nil {
 			t.Errorf("Unexpected error on Add(%v): %v", job, err)
@@ -168,44 +207,5 @@ func testFullJobQueueMultipleOutputChannel(t *testing.T, q jobqueue.FullJobQueue
 
 	if recvCount != numElements {
 		t.Errorf("Expected %d jobs, but received %d", numElements, recvCount)
-	}
-}
-
-func TestInputJobQueueImplementations(t *testing.T) {
-	for _, impl := range inputImplementations {
-		t.Run(impl.name+"/AddSucceeds", func(t *testing.T) {
-			testAddSucceeds(t, impl.newQ())
-		})
-		t.Run(impl.name+"/AddHonorsCancel", func(t *testing.T) {
-			testAddHonorsCancel(t, impl.newQ())
-		})
-	}
-}
-
-func TestOutputJobQueueImplementations(t *testing.T) {
-	for _, impl := range outputImplementations {
-		t.Run(impl.name+"/GetOutputChannel", func(t *testing.T) {
-			testGetOutputChannelSucceeds(t, impl.newQ())
-		})
-	}
-}
-
-func TestFullJobQueueImplementations(t *testing.T) {
-	for _, impl := range fullImplementations {
-		t.Run(impl.name+"/AddSucceeds", func(t *testing.T) {
-			testAddSucceeds(t, impl.newQ())
-		})
-		t.Run(impl.name+"/AddHonorsCancel", func(t *testing.T) {
-			testAddHonorsCancel(t, impl.newQ())
-		})
-		t.Run(impl.name+"/GetOutputChannel", func(t *testing.T) {
-			testGetOutputChannelSucceeds(t, impl.newQ())
-		})
-		t.Run(impl.name+"/ConcurrentAdds", func(t *testing.T) {
-			testFullJobQueueConcurrentAdds(t, impl.newQ())
-		})
-		t.Run(impl.name+"/ConcurrentReads", func(t *testing.T) {
-			testFullJobQueueMultipleOutputChannel(t, impl.newQ())
-		})
 	}
 }

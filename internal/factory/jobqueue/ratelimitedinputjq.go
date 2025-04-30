@@ -2,8 +2,10 @@ package jobqueue
 
 import (
 	"context"
+
+	"golang.org/x/time/rate"
+
 	"github.com/zydee3/stockdb/internal/common/logger"
-	rate "golang.org/x/time/rate"
 )
 
 type rateLimitedInputJQ struct {
