@@ -3,14 +3,15 @@ package jobqueue
 import (
 	"context"
 
+	"github.com/zydee3/stockdb/internal/common/jobs"
 	"github.com/zydee3/stockdb/internal/common/logger"
 )
 
 type unifiedJobQueue struct {
-	jobQueueChannel chan JobDefinition
+	jobQueueChannel chan jobs.Job
 }
 
-func (u *unifiedJobQueue) Add(context context.Context, jobDefinition JobDefinition) error {
+func (u *unifiedJobQueue) Add(context context.Context, jobDefinition jobs.Job) error {
 	if context.Err() != nil {
 		return context.Err()
 	}
@@ -25,12 +26,12 @@ func (u *unifiedJobQueue) Add(context context.Context, jobDefinition JobDefiniti
 	}
 }
 
-func (u *unifiedJobQueue) GetOutputChannel() (<-chan JobDefinition, error) {
+func (u *unifiedJobQueue) GetOutputChannel() (<-chan jobs.Job, error) {
 	return u.jobQueueChannel, nil
 }
 
 func NewUnifiedJobQueue(size uint) FullJobQueue {
 	return &unifiedJobQueue{
-		jobQueueChannel: make(chan JobDefinition, size),
+		jobQueueChannel: make(chan jobs.Job, size),
 	}
 }

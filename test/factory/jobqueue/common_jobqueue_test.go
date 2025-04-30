@@ -8,6 +8,7 @@ import (
 
 	"golang.org/x/time/rate"
 
+	"github.com/zydee3/stockdb/internal/common/jobs"
 	"github.com/zydee3/stockdb/internal/factory/jobqueue"
 )
 
@@ -87,8 +88,8 @@ func TestFullJobQueueImplementations(t *testing.T) {
 	}
 }
 
-func testJobDefinition() jobqueue.JobDefinition {
-	return jobqueue.JobDefinition{}
+func testJobDefinition() jobs.Job {
+	return jobs.Job{}
 }
 
 func testAddSucceeds(t *testing.T, q jobqueue.InputJobQueue) {
@@ -130,7 +131,7 @@ func testFullJobQueueConcurrentAdds(t *testing.T, q jobqueue.FullJobQueue) {
 
 	for range numProducers {
 		job := testJobDefinition()
-		go func(j jobqueue.JobDefinition) {
+		go func(j jobs.Job) {
 			defer wg.Done()
 			addErr := q.Add(context.Background(), j)
 			if addErr != nil {
@@ -176,7 +177,7 @@ func testFullJobQueueMultipleOutputChannel(t *testing.T, q jobqueue.FullJobQueue
 	wg.Add(2)
 	recvCount := 0
 	var mu sync.Mutex
-	consume := func(ch <-chan jobqueue.JobDefinition) {
+	consume := func(ch <-chan jobs.Job) {
 		defer wg.Done()
 		for {
 			select {

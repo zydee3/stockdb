@@ -1,9 +1,10 @@
 package jobqueue
 
-import "context"
+import (
+	"context"
 
-type JobDefinition struct {
-}
+	"github.com/zydee3/stockdb/internal/common/jobs"
+)
 
 type FullJobQueue interface {
 	InputJobQueue
@@ -11,9 +12,9 @@ type FullJobQueue interface {
 }
 
 type InputJobQueue interface {
-	Add(context context.Context, jobDefinition JobDefinition) error
+	Add(context context.Context, jobDefinition jobs.Job) error
 }
 
 type OutputJobQueue interface {
-	GetOutputChannel() (<-chan JobDefinition, error)
+	GetOutputChannel() (<-chan jobs.Job, error)
 }

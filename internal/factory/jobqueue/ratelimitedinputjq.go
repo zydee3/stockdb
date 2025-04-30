@@ -5,6 +5,7 @@ import (
 
 	"golang.org/x/time/rate"
 
+	"github.com/zydee3/stockdb/internal/common/jobs"
 	"github.com/zydee3/stockdb/internal/common/logger"
 )
 
@@ -13,7 +14,7 @@ type rateLimitedInputJQ struct {
 	rateLimiter   *rate.Limiter
 }
 
-func (r *rateLimitedInputJQ) Add(context context.Context, jobDefinition JobDefinition) error {
+func (r *rateLimitedInputJQ) Add(context context.Context, jobDefinition jobs.Job) error {
 	err := r.rateLimiter.Wait(context)
 	if err != nil {
 		logger.Debugf("Failed to add job definition to rate limited job queue: %v", err)
