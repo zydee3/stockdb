@@ -6,7 +6,7 @@ COPY . ./
 
 RUN make build
 
-FROM build AS test-stage
+FROM build AS test
 RUN make test
 
 ## Deploy

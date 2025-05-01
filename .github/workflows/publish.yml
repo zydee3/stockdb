@@ -22,6 +22,9 @@ jobs:
     - name: build image
       run: podman build -t stockdb .
 
+    - name: test image
+      run: podman build --target test .
+
     - name: Podman login to ghcr
       run: echo "${{ github.token }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
 

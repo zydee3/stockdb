@@ -36,3 +36,6 @@ jobs:
 
     - name: build image
       run: podman build -t stockdb .
+
+    - name: test image
+      run: podman build --target test .
