@@ -29,7 +29,7 @@ jobs:
         if grep -q '^toolchain ' go.mod; then echo "Error: go.mod must not have toolchain directive, please fix"; exit 1; fi
 
   build-container-image:
-    name: publish container image
+    name: Build container image
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4

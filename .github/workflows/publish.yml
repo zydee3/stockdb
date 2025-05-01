@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   publish-container-image:
-    name: publish container image
+    name: Publish container image
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -37,5 +37,4 @@ jobs:
       run:
         podman tag stockdb ghcr.io/${{ github.repository }}/stockdb:main
         podman push ghcr.io/${{ github.repository }}/stockdb:main
-
 
