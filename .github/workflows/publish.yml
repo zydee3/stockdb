@@ -21,8 +21,12 @@ jobs:
 
     - name: build image
       run: podman build -t stockdb .
+    
+    - name: verify image
+      run: podman run --rm stockdb /bin/stockd --version
 
     - name: test image
+      # Don't continue with publishing if any testing fails
       run: podman build --target test .
 
     - name: Podman login to ghcr
