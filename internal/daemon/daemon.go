@@ -120,10 +120,10 @@ func (d *Daemon) Shutdown() error {
 }
 
 func Init() {
-	cmd := &cli.Command {
-		Name: "stockd",
+	cmd := &cli.Command{
+		Name:        "stockd",
 		Description: "Daemon for StockDB",
-		Version: version.GetVersion(),
+		Version:     version.GetVersion(),
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			d := NewDaemon(ctx)
 

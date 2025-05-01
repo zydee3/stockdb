@@ -6,8 +6,6 @@ import (
 	"github.com/zydee3/stockdb/internal/unix/client"
 )
 
-
-
 func main() {
 	logger.Infof("Starting StockCtl. Version: %s", version.GetVersion())
 

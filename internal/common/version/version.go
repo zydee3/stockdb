@@ -9,5 +9,5 @@ var (
 )
 
 func GetVersion() string {
-  return fmt.Sprintf("%s-%s", version, gitCommit)
+	return fmt.Sprintf("%s-%s", version, gitCommit)
 }

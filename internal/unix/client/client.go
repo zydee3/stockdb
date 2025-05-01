@@ -11,10 +11,10 @@ import (
 )
 
 func Init() {
-	cmd := &cli.Command {
-		Name: "stockctl",
+	cmd := &cli.Command{
+		Name:        "stockctl",
 		Description: "Command-line tool for StockDB",
-		Version: version.GetVersion(),
+		Version:     version.GetVersion(),
 		Commands: []*cli.Command{
 			&applyYamlCommand,
 		},
