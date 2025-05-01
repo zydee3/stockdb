@@ -7,11 +7,11 @@ import (
 )
 
 //nolint:gochecknoglobals // gochecknoglobals
-var logger = slog.Default()
+var logger = setupLogger()
 
-func SetupLogger() {
+func setupLogger() *slog.Logger {
 	// TODO: Oscar - Load logging info from config file and cli options
-	logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+	return slog.New(slog.NewTextHandler(os.Stdout, nil))
 }
 
 func Debug(msg string, args ...any) {

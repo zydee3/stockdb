@@ -9,9 +9,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v3"
 
 	"github.com/zydee3/stockdb/internal/common/logger"
+	"github.com/zydee3/stockdb/internal/common/version"
 	daemonConfig "github.com/zydee3/stockdb/internal/config"
 	"github.com/zydee3/stockdb/internal/unix/server"
 	"github.com/zydee3/stockdb/internal/unix/socket"
@@ -25,11 +26,11 @@ type Daemon struct {
 	shutdownTimer *time.Timer
 }
 
-func NewDaemon() *Daemon {
+func NewDaemon(ctx context.Context) *Daemon {
 	const (
 		errorChannelSize = 10
 	)
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 	return &Daemon{
 		ctx:        ctx,
 		cancelFunc: cancel,
@@ -119,21 +120,22 @@ func (d *Daemon) Shutdown() error {
 }
 
 func Init() {
-	app := cli.NewApp()
-	app.Name = "stockd"
-	app.Usage = "Daemon for StockDB"
-	app.Version = "0.1.0"
+	cmd := &cli.Command {
+		Name: "stockd",
+		Description: "Daemon for StockDB",
+		Version: version.GetVersion(),
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			d := NewDaemon(ctx)
 
-	app.Action = func(_ *cli.Context) error {
-		d := NewDaemon()
-		if err := d.Run(); err != nil {
-			return cli.NewExitError(err, 1)
-		}
+			if err := d.Run(); err != nil {
+				return cli.Exit(err, 1)
+			}
 
-		return nil
+			return nil
+		},
 	}
 
-	if err := app.Run(os.Args); err != nil {
+	if err := cmd.Run(context.Background(), os.Args); err != nil {
 		logger.Error("%w", err)
 		os.Exit(1)
 	}

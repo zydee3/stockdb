@@ -1,12 +1,13 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
 	"os"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v3"
 	"gopkg.in/yaml.v3"
 
 	"github.com/zydee3/stockdb/internal/common/crd"
@@ -18,11 +19,10 @@ import (
 //nolint:gochecknoglobals // gochecknoglobals
 var applyYamlCommand = cli.Command{
 	Name:        "apply",
-	Usage:       "Apply a YAML file to the StockDB server",
 	ArgsUsage:   "<yaml-file>",
 	Description: `Apply a YAML file to the StockDB server.`,
 	Flags: []cli.Flag{
-		cli.StringFlag{
+		&cli.StringFlag{
 			Name:  "file, f",
 			Usage: "(-f <yaml-file>)",
 		},
@@ -48,46 +48,46 @@ func loadDataCollectionYaml(filename string) (*crd.DataCollection, error) {
 	return dataCollection, nil
 }
 
-func onBefore(c *cli.Context) error {
-	filename := c.String("file")
+func onBefore(ctx context.Context, cmd *cli.Command) (context.Context, error) {
+	filename := cmd.String("file")
 
 	if filename == "" {
-		return cli.NewExitError("no yaml file provided", 1)
+		return nil, cli.Exit("no yaml file provided", 1)
 	}
 
 	// check if the file exists
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
-		return cli.NewExitError(fmt.Sprintf("file %s does not exist", filename), 1)
+		return nil, cli.Exit(fmt.Sprintf("file %s does not exist", filename), 1)
 	}
 
-	return nil
+	return nil, nil
 }
 
-func onAction(c *cli.Context) error {
-	filename := c.String("file")
+func onAction(ctx context.Context, cmd *cli.Command) error {
+	filename := cmd.String("file")
 
 	crd, err := loadDataCollectionYaml(filename)
 	if err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	conn, err := net.Dial("unix", socket.SocketPath)
 	if err != nil {
-		return cli.NewExitError(err, 1)
+		return cli.Exit(err, 1)
 	}
 
 	defer conn.Close()
 
-	cmd := messages.Command{
+	stockdbCmd := messages.Command{
 		Type:       messages.CommandTypeApply,
 		Parameters: make(map[string]string),
 		Data:       crd,
 	}
 
 	encoder := json.NewEncoder(conn)
-	if encodeError := encoder.Encode(cmd); encodeError != nil {
+	if encodeError := encoder.Encode(stockdbCmd); encodeError != nil {
 		logger.Error("%w", encodeError)
-		return cli.NewExitError(encodeError, 1)
+		return cli.Exit(encodeError, 1)
 	}
 
 	// Receive and parse response
@@ -95,7 +95,7 @@ func onAction(c *cli.Context) error {
 
 	decoder := json.NewDecoder(conn)
 	if decodeError := decoder.Decode(&response); decodeError != nil {
-		return cli.NewExitError(decodeError, 1)
+		return cli.Exit(decodeError, 1)
 	}
 
 	logger.Info("Response received from server:", response)
