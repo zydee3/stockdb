@@ -35,9 +35,9 @@ jobs:
         podman tag stockdb ghcr.io/${{ github.repository }}/stockdb:${STOCKDB_VERSION}
         podman push ghcr.io/${{ github.repository }}/stockdb:${STOCKDB_VERSION}
 
-    - name: Publish main branch
+    - name: Publish main branch as latest
       if: github.ref == 'ref/head/main'
       run:
-        podman tag stockdb ghcr.io/${{ github.repository }}/stockdb:main
-        podman push ghcr.io/${{ github.repository }}/stockdb:main
+        podman tag stockdb ghcr.io/${{ github.repository }}/stockdb:latest
+        podman push ghcr.io/${{ github.repository }}/stockdb:latest
 
