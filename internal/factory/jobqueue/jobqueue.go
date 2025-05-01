@@ -12,7 +12,7 @@ type FullJobQueue interface {
 }
 
 type InputJobQueue interface {
-	Add(context context.Context, jobDefinition jobs.Job) error
+	Add(ctx context.Context, jobDefinition jobs.Job) error
 }
 
 type OutputJobQueue interface {

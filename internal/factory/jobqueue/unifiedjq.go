@@ -11,16 +11,16 @@ type unifiedJobQueue struct {
 	jobQueueChannel chan jobs.Job
 }
 
-func (u *unifiedJobQueue) Add(context context.Context, jobDefinition jobs.Job) error {
-	if context.Err() != nil {
-		return context.Err()
+func (u *unifiedJobQueue) Add(ctx context.Context, jobDefinition jobs.Job) error {
+	if ctx.Err() != nil {
+		return ctx.Err()
 	}
 
 	select {
 	case u.jobQueueChannel <- jobDefinition:
 		return nil
-	case <-context.Done():
-		err := context.Err()
+	case <-ctx.Done():
+		err := ctx.Err()
 		logger.Debugf("Failed to add job definition to unified job queue: %v", err)
 		return err
 	}
