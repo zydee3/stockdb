@@ -60,10 +60,10 @@ func onBefore(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 		return nil, cli.Exit(fmt.Sprintf("file %s does not exist", filename), 1)
 	}
 
-	return nil, nil
+	return ctx, nil
 }
 
-func onAction(ctx context.Context, cmd *cli.Command) error {
+func onAction(_ context.Context, cmd *cli.Command) error {
 	filename := cmd.String("file")
 
 	crd, err := loadDataCollectionYaml(filename)

@@ -124,7 +124,7 @@ func Init() {
 		Name:        "stockd",
 		Description: "Daemon for StockDB",
 		Version:     version.GetVersion(),
-		Action: func(ctx context.Context, cmd *cli.Command) error {
+		Action: func(ctx context.Context, _ *cli.Command) error {
 			d := NewDaemon(ctx)
 
 			if err := d.Run(); err != nil {
