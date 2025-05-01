@@ -28,7 +28,7 @@ jobs:
     - name: Publish version image
       run: |
         #STOCKDB_VERSION=$(podman run --rm stockdb /bin/stockd --version)
-        STOCKDB_VERSION="${{ githhub.sha }}"
+        STOCKDB_VERSION="${{ github.sha }}"
         podman tag stockdb ghcr.io/${{ github.repository }}/stockdb:${STOCKDB_VERSION}
         podman push ghcr.io/${{ github.repository }}/stockdb:${STOCKDB_VERSION}
 
