@@ -23,6 +23,7 @@ jobs:
       run: podman build -t stockdb .
     
     - name: verify image
+      timeout-minutes: 1
       run: podman run --rm stockdb /bin/stockd --version
 
     - name: test image
