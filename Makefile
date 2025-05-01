@@ -2,6 +2,7 @@ STOCKDB_OUTPUT_BINARY_NAME ?= stockd
 STOCKCTL_OUTPUT_BINARY_NAME ?= stockctl
 
 GOLANG_BUILD_FLAGS ?= -v
+GOLANG_TEST_FLAGS ?= -race
 BUILD_DIRECTORY ?= build
 INSTALL_DIRECTORY ?= /usr/local/bin
 
@@ -61,7 +62,7 @@ run-$(STOCKDB_OUTPUT_BINARY_NAME): $(STOCKDB_OUTPUT_BINARY_NAME)
 .PHONY: test
 test:
 	@echo "Running tests"
-	@go test $(GOLANG_BUILD_FLAGS) ./...
+	@go test $(GOLANG_BUILD_FLAGS) $(GOLANG_TEST_FLAGS) ./...
 
 .PHONY: lint
 lint:
