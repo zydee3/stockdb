@@ -13,9 +13,23 @@ permissions:
   packages: write
 
 jobs:
+  deep-test:
+    name: Run full integration and CI test suite.
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.24'
+
+    - run: go clean -testcache 
+    - run: make test
+    
   publish-container-image:
     name: Publish container image
     runs-on: ubuntu-latest
+    needs: deep-test
     steps:
     - uses: actions/checkout@v4
 
