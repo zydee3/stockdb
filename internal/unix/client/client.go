@@ -1,24 +1,26 @@
 package client
 
 import (
+	"context"
 	"os"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v3"
 
 	"github.com/zydee3/stockdb/internal/common/logger"
+	"github.com/zydee3/stockdb/internal/common/version"
 )
 
 func Init() {
-	app := cli.NewApp()
-	app.Name = "stockctl"
-	app.Usage = "Command-line tool for StockDB"
-	app.Version = "0.1.0"
-
-	app.Commands = []cli.Command{
-		applyYamlCommand,
+	cmd := &cli.Command{
+		Name:        "stockctl",
+		Description: "Command-line tool for StockDB",
+		Version:     version.GetVersion(),
+		Commands: []*cli.Command{
+			&applyYamlCommand,
+		},
 	}
 
-	if err := app.Run(os.Args); err != nil {
+	if err := cmd.Run(context.Background(), os.Args); err != nil {
 		logger.Error("%w", err)
 		os.Exit(1)
 	}
