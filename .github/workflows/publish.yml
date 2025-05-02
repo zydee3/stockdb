@@ -23,9 +23,8 @@ jobs:
       with:
         go-version: '1.24'
 
-    - run: go clean -testcache 
-    - run: make test
-    
+    - run: make test-full
+
   publish-container-image:
     name: Publish container image
     runs-on: ubuntu-latest
