@@ -2,7 +2,7 @@ STOCKDB_OUTPUT_BINARY_NAME ?= stockd
 STOCKCTL_OUTPUT_BINARY_NAME ?= stockctl
 
 GOLANG_BUILD_FLAGS ?= -v
-GOLANG_TEST_FLAGS ?= -race
+GOLANG_TEST_FLAGS ?= -race -cover -coverpkg=./cmd/...,./internal/... -shuffle on
 BUILD_DIRECTORY ?= build
 INSTALL_DIRECTORY ?= /usr/local/bin
 
