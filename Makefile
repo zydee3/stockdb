@@ -2,8 +2,8 @@ STOCKDB_OUTPUT_BINARY_NAME ?= stockd
 STOCKCTL_OUTPUT_BINARY_NAME ?= stockctl
 
 GOLANG_BUILD_FLAGS ?= -v
-GOLANG_TEST_FLAGS ?= -race
-GOLANG_FULL_TEST_FLAGS ?= -count=1 -cover -coverpkg=./cmd/...,./internal/... -shuffle on
+GOLANG_TEST_FLAGS ?= -race -bench=.
+GOLANG_FULL_TEST_FLAGS ?= -count=10 -benchtime=30s -shuffle on
 BUILD_DIRECTORY ?= build
 INSTALL_DIRECTORY ?= /usr/local/bin
 
@@ -69,6 +69,11 @@ test:
 test-full:
 	@echo "Running full tests"
 	@go test $(GOLANG_BUILD_FLAGS) $(GOLANG_TEST_FLAGS) $(GOLANG_FULL_TEST_FLAGS) ./...
+
+.PHONY: test-coverage
+test-coverage:
+	@echo "Test coverage support"
+	@go test -cover -coverpkg=./cmd/...,./internal/... $(GOLANG_BUILD_FLAGS) $(GOLANG_TEST_FLAGS) ./...
 
 .PHONY: lint
 lint:
