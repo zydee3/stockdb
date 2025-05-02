@@ -8,7 +8,7 @@ INSTALL_DIRECTORY ?= /usr/local/bin
 
 VERSION := v0.1
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
-LDFLAGS_COMMON := -X main.gitCommit=$(GIT_COMMIT) -X main.version=$(VERSION)
+LDFLAGS_COMMON := -X github.com/zydee3/stockdb/internal/common/version.gitCommit=$(GIT_COMMIT) -X github.com/zydee3/stockdb/internal/common/version.version=$(VERSION)
 
 
 # Default target

@@ -9,8 +9,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/urfave/cli"
-
 	"github.com/zydee3/stockdb/internal/common/logger"
 	"github.com/zydee3/stockdb/internal/common/utility"
 	"github.com/zydee3/stockdb/internal/unix/messages"
@@ -57,7 +55,7 @@ func createSocketDirectory(socketPath string) error {
 		socketDirPerm = 0755
 	)
 	if err := utility.CreateParentDir(socketPath, socketDirPerm); err != nil {
-		return cli.NewExitError(err, 1)
+		return err
 	}
 
 	return nil
@@ -66,7 +64,7 @@ func createSocketDirectory(socketPath string) error {
 func createSocketListener(socketPath string) (net.Listener, error) {
 	listener, err := net.Listen("unix", socketPath)
 	if err != nil {
-		return nil, cli.NewExitError(err, 1)
+		return nil, err
 	}
 
 	// Set the socket permissions
@@ -78,7 +76,7 @@ func createSocketListener(socketPath string) (net.Listener, error) {
 		}
 
 		// Remove the socket file
-		return nil, cli.NewExitError(chmodError, 1)
+		return nil, chmodError
 	}
 
 	return listener, nil
