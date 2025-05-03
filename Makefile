@@ -1,3 +1,8 @@
+ifeq (,$(findstring j,$(MAKEFLAGS)))
+CPUS ?= $(shell nproc)
+MAKEFLAGS += -j $(CPUS)
+endif
+
 STOCKDB_OUTPUT_BINARY_NAME ?= stockd
 STOCKCTL_OUTPUT_BINARY_NAME ?= stockctl
 
