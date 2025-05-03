@@ -27,7 +27,7 @@ jobs:
 
   publish-container-image:
     name: Publish container image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: deep-test
     steps:
     - uses: actions/checkout@v4
@@ -54,7 +54,7 @@ jobs:
         podman push ghcr.io/${{ github.repository }}/stockdb:${STOCKDB_VERSION}
 
     - name: Publish main branch as latest
-      if: github.ref == 'ref/head/main'
+      if: github.ref == 'ref/heads/main'
       run:
         podman tag stockdb ghcr.io/${{ github.repository }}/stockdb:latest
         podman push ghcr.io/${{ github.repository }}/stockdb:latest
