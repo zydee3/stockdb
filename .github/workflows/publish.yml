@@ -1,0 +1,61 @@
+name: Publish
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - '.github/workflows/publish.yml'
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  deep-test:
+    name: Run full integration and CI test suite.
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.24'
+
+    - run: make test-full
+
+  publish-container-image:
+    name: Publish container image
+    runs-on: ubuntu-24.04
+    needs: deep-test
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: build image
+      run: podman build -t stockdb .
+    
+    - name: verify image
+      timeout-minutes: 1
+      run: podman run --rm stockdb /bin/stockd --version
+
+    - name: test image
+      # Don't continue with publishing if any testing fails
+      run: podman build --target test .
+
+    - name: Podman login to ghcr
+      run: echo "${{ github.token }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin
+
+    - name: Publish version image
+      run: |
+        #STOCKDB_VERSION=$(podman run --rm stockdb /bin/stockd --version)
+        STOCKDB_VERSION="${{ github.sha }}"
+        podman tag stockdb ghcr.io/${{ github.repository }}/stockdb:${STOCKDB_VERSION}
+        podman push ghcr.io/${{ github.repository }}/stockdb:${STOCKDB_VERSION}
+
+    - name: Publish main branch as latest
+      if: github.ref == 'ref/heads/main'
+      run:
+        podman tag stockdb ghcr.io/${{ github.repository }}/stockdb:latest
+        podman push ghcr.io/${{ github.repository }}/stockdb:latest
+
