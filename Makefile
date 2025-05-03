@@ -65,25 +65,6 @@ run-$(STOCKDB_OUTPUT_BINARY_NAME): $(STOCKDB_OUTPUT_BINARY_NAME)
 	@echo "=== RUN OUTPUT ===================="
 	@./$(BUILD_DIRECTORY)/$(STOCKDB_OUTPUT_BINARY_NAME)
 
-.PHONY: test
-test:
-	@echo "Running tests"
-	@go test $(GOLANG_BUILD_FLAGS) $(GOLANG_TEST_FLAGS) ./...
-
-.PHONY: test-full
-test-full:
-	@echo "Running full tests"
-	@go test $(GOLANG_BUILD_FLAGS) $(GOLANG_TEST_FLAGS) $(GOLANG_FULL_TEST_FLAGS) ./...
-
-.PHONY: test-coverage
-test-coverage:
-	@echo "Test coverage support"
-	@go test -cover -coverpkg=./cmd/...,./internal/... $(GOLANG_BUILD_FLAGS) $(GOLANG_TEST_FLAGS) ./...
-
-.PHONY: lint
-lint:
-	@golangci-lint run ./...
-
 # Run stockctl
 .PHONY: run-$(STOCKCTL_OUTPUT_BINARY_NAME)
 run-$(STOCKCTL_OUTPUT_BINARY_NAME): $(STOCKCTL_OUTPUT_BINARY_NAME)
@@ -108,3 +89,22 @@ uninstall:
 	@rm -f $(INSTALL_DIRECTORY)/$(STOCKDB_OUTPUT_BINARY_NAME)
 	@rm -f $(INSTALL_DIRECTORY)/$(STOCKCTL_OUTPUT_BINARY_NAME)
 	@echo "Uninstallation complete"
+
+.PHONY: test
+test:
+	@echo "Running tests"
+	@go test $(GOLANG_BUILD_FLAGS) $(GOLANG_TEST_FLAGS) ./...
+
+.PHONY: test-full
+test-full:
+	@echo "Running full tests"
+	@go test $(GOLANG_BUILD_FLAGS) $(GOLANG_TEST_FLAGS) $(GOLANG_FULL_TEST_FLAGS) ./...
+
+.PHONY: test-coverage
+test-coverage:
+	@echo "Test coverage support"
+	@go test -cover -coverpkg=./cmd/...,./internal/... $(GOLANG_BUILD_FLAGS) $(GOLANG_TEST_FLAGS) ./...
+
+.PHONY: lint
+lint:
+	@golangci-lint run ./...
