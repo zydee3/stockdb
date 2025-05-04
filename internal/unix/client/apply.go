@@ -23,8 +23,9 @@ var applyYamlCommand = cli.Command{
 	Description: `Apply a YAML file to the StockDB server.`,
 	Flags: []cli.Flag{
 		&cli.StringFlag{
-			Name:  "file, f",
-			Usage: "(-f <yaml-file>)",
+			Name:    "file",
+			Aliases: []string{"f"},
+			Usage:   "(-f <yaml-file>)",
 		},
 	},
 	Before: onBefore,
@@ -98,7 +99,7 @@ func onAction(_ context.Context, cmd *cli.Command) error {
 		return cli.Exit(decodeError, 1)
 	}
 
-	logger.Info("Response received from server:", response)
+	logger.Infof("Response received from server: %s", response.String())
 
 	return nil
 }

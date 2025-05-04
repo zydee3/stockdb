@@ -18,6 +18,14 @@ func Init() {
 		Commands: []*cli.Command{
 			&applyYamlCommand,
 		},
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "verbose, v",
+				Aliases: []string{"v"},
+				Usage:   "(-v)",
+				Value:   false,
+			},
+		},
 	}
 
 	if err := cmd.Run(context.Background(), os.Args); err != nil {

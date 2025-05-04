@@ -1,5 +1,9 @@
 package messages
 
+import (
+	"fmt"
+)
+
 type ResponseType string
 
 const (
@@ -27,4 +31,8 @@ func NewResponseType(s string) ResponseType {
 
 func (t ResponseType) String() string {
 	return string(t)
+}
+
+func (r *Response) String() string {
+	return fmt.Sprintf("Response (Type: %s, Message: %s, Data: %v)", r.Type, r.Message, r.Data)
 }

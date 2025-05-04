@@ -1,5 +1,9 @@
 package messages
 
+import (
+	"strings"
+)
+
 type CommandType string
 
 const (
@@ -14,9 +18,13 @@ type Command struct {
 }
 
 func NewCommandType(s string) CommandType {
-	switch s {
-	case "apply":
-		return CommandTypeApply
+	s = strings.ToLower(s)
+	t := CommandType(s)
+
+	switch t {
+	case CommandTypeApply,
+		CommandTypeUnknown:
+		return t
 	default:
 		return CommandTypeUnknown
 	}
