@@ -6,9 +6,9 @@ import "fmt"
 
 type DataCollection struct {
 	APIVersion string   `db:"api_version" mapstructure:"APIVersion" yaml:"apiVersion"`
-	Kind       Kind     `db:"kind" mapstructure:"Kind" yaml:"kind"`
-	Metadata   MetaData `db:"metadata" mapstructure:"Metadata" yaml:"metadata"`
-	Spec       Spec     `db:"spec" mapstructure:"Spec" yaml:"spec"`
+	Kind       Kind     `db:"kind"        mapstructure:"Kind"       yaml:"kind"`
+	Metadata   MetaData `db:"metadata"    mapstructure:"Metadata"   yaml:"metadata"`
+	Spec       Spec     `db:"spec"        mapstructure:"Spec"       yaml:"spec"`
 }
 
 func (dc *DataCollection) GetAPIVersion() string {

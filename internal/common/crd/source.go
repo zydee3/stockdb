@@ -3,8 +3,8 @@ package crd
 import "fmt"
 
 type Source struct {
-	Type       string            `db:"type" mapstructure:"type" yaml:"type"`
-	Endpoint   string            `db:"endpoint" mapstructure:"endpoint" yaml:"endpoint"`
+	Type       string            `db:"type"       mapstructure:"type"       yaml:"type"`
+	Endpoint   string            `db:"endpoint"   mapstructure:"endpoint"   yaml:"endpoint"`
 	Parameters map[string]string `db:"parameters" mapstructure:"parameters" yaml:"parameters,omitempty"`
 }
 

@@ -3,10 +3,10 @@ package crd
 import "fmt"
 
 type Spec struct {
-	Source   Source   `db:"source" mapstructure:"source" yaml:"source"`
-	Targets  Targets  `db:"targets" mapstructure:"targets" yaml:"targets"`
+	Source   Source   `db:"source"   mapstructure:"source"   yaml:"source"`
+	Targets  Targets  `db:"targets"  mapstructure:"targets"  yaml:"targets"`
 	Schedule Schedule `db:"schedule" mapstructure:"schedule" yaml:"schedule"`
-	Options  Options  `db:"options" mapstructure:"options" yaml:"options"`
+	Options  Options  `db:"options"  mapstructure:"options"  yaml:"options"`
 }
 
 func (s *Spec) String() string {
