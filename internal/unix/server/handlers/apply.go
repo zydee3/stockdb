@@ -1,16 +1,14 @@
 package handlers
 
 import (
-	"fmt"
-
 	"github.com/mitchellh/mapstructure"
 
 	"github.com/zydee3/stockdb/internal/common/crd"
-	"github.com/zydee3/stockdb/internal/common/logger"
+	"github.com/zydee3/stockdb/internal/factory/manager"
 	"github.com/zydee3/stockdb/internal/unix/messages"
 )
 
-func OnApplyRequest(cmd messages.Command) messages.Response {
+func OnApplyRequest(cmd messages.Command, manager *manager.Manager) messages.Response {
 	jobData := cmd.Data
 	if jobData == nil {
 		return messages.Response{
@@ -24,14 +22,21 @@ func OnApplyRequest(cmd messages.Command) messages.Response {
 	if err := mapstructure.Decode(jobData, &job); err != nil {
 		return messages.Response{
 			Type:    messages.ResponseTypeError,
-			Message: fmt.Sprintf("Failed to decode job data: %v", err),
+			Message: err.Error(),
 		}
 	}
 
-	logger.Infof("Processing job: %s", job.String())
+	// Save the job to the database
+	saveID, saveError := manager.SaveCRD(job)
+	if saveError != nil {
+		return messages.Response{
+			Type:    messages.ResponseTypeError,
+			Message: saveError.Error(),
+		}
+	}
 
 	return messages.Response{
 		Type:    messages.ResponseTypeSuccess,
-		Message: fmt.Sprintf("Received Apply Command: %s", cmd.Type.String()),
+		Message: saveID,
 	}
 }

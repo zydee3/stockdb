@@ -2,7 +2,7 @@ package crd
 
 type CRD interface {
 	GetAPIVersion() string
-	GetKind() string
+	GetKind() Kind
 	GetName() string
 	GetSource() Source
 	GetSchedule() Schedule

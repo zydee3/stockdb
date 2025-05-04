@@ -11,6 +11,7 @@ import (
 
 	"github.com/zydee3/stockdb/internal/common/logger"
 	"github.com/zydee3/stockdb/internal/common/utility"
+	"github.com/zydee3/stockdb/internal/factory/manager"
 	"github.com/zydee3/stockdb/internal/unix/messages"
 	"github.com/zydee3/stockdb/internal/unix/server/handlers"
 )
@@ -33,9 +34,20 @@ func StartServer(ctx context.Context, socketPath string) error {
 
 	defer listener.Close()
 
+	manager, err := manager.NewManager(ctx)
+	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+	defer func() {
+		const shutdownTimeout = 30 * time.Second
+		if shutdownError := manager.Shutdown(shutdownTimeout); shutdownError != nil {
+			logger.Error("%w", shutdownError)
+		}
+	}()
+
 	logger.Infof("Socket server started on %s", socketPath)
 
-	return runServer(ctx, listener, socketPath)
+	return runServer(ctx, manager, listener, socketPath)
 }
 
 func createSocketDirectory(socketPath string) error {
@@ -82,7 +94,7 @@ func createSocketListener(socketPath string) (net.Listener, error) {
 	return listener, nil
 }
 
-func runServer(ctx context.Context, listener net.Listener, socketPath string) error {
+func runServer(ctx context.Context, mgr *manager.Manager, listener net.Listener, socketPath string) error {
 	const (
 		drainTimeout = 30 * time.Second
 	)
@@ -97,14 +109,14 @@ func runServer(ctx context.Context, listener net.Listener, socketPath string) er
 	// Start accepting connections in a goroutine
 	acceptDone := make(chan error, 1)
 	go func() {
-		acceptDone <- acceptConnections(acceptCtx, listener, tracker)
+		acceptDone <- acceptConnections(acceptCtx, mgr, listener, tracker)
 	}()
 
 	// Wait for either parent context cancellation or acceptor error
 	var err error
 	select {
 	case <-ctx.Done():
-		logger.Info("daemon shutdown initiated")
+		logger.Info("Daemon shutdown initiated")
 
 		// Cancel the acceptor to stop new connections
 		cancelAccept()
@@ -118,7 +130,7 @@ func runServer(ctx context.Context, listener net.Listener, socketPath string) er
 		if drainErr != nil {
 			logger.Error("%w", drainErr)
 		} else {
-			logger.Info("drain completed successfully")
+			logger.Info("Drain completed successfully")
 		}
 
 		// Wait for acceptor to exit and capture any error
@@ -138,7 +150,7 @@ func runServer(ctx context.Context, listener net.Listener, socketPath string) er
 	return err
 }
 
-func acceptConnections(ctx context.Context, listener net.Listener, tracker *Tracker) error {
+func acceptConnections(ctx context.Context, mgr *manager.Manager, listener net.Listener, tracker *Tracker) error {
 	for {
 		// Use acceptChan pattern to make listener.Accept() cancellable
 		acceptChan := make(chan net.Conn, 1)
@@ -161,7 +173,7 @@ func acceptConnections(ctx context.Context, listener net.Listener, tracker *Trac
 
 		case connection := <-acceptChan:
 			// New connection
-			go handleConnection(connection, tracker)
+			go handleConnection(connection, mgr, tracker)
 
 		case err := <-acceptErrChan:
 			// If we're shutting down, ignore accept errors
@@ -175,8 +187,8 @@ func acceptConnections(ctx context.Context, listener net.Listener, tracker *Trac
 	}
 }
 
-func handleConnection(connection net.Conn, tracker *Tracker) {
-	var requestHandlers = map[messages.CommandType]func(messages.Command) messages.Response{
+func handleConnection(connection net.Conn, mgr *manager.Manager, tracker *Tracker) {
+	var requestHandlers = map[messages.CommandType]func(messages.Command, *manager.Manager) messages.Response{
 		messages.CommandTypeApply:   handlers.OnApplyRequest,
 		messages.CommandTypeUnknown: handlers.OnUnknownRequest,
 	}
@@ -196,7 +208,7 @@ func handleConnection(connection net.Conn, tracker *Tracker) {
 		return
 	}
 
-	response := requestHandlers[cmd.Type](*cmd)
+	response := requestHandlers[cmd.Type](*cmd, mgr)
 
 	// Send response back to client
 	if respError := sendResponse(connection, response); respError != nil {

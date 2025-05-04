@@ -11,41 +11,41 @@ type DataCollection struct {
 	Spec       Spec     `db:"spec"        mapstructure:"Spec"       yaml:"spec"`
 }
 
-func (dc *DataCollection) GetAPIVersion() string {
+func (dc DataCollection) GetAPIVersion() string {
 	return dc.APIVersion
 }
 
-func (dc *DataCollection) GetKind() Kind {
+func (dc DataCollection) GetKind() Kind {
 	return dc.Kind
 }
 
-func (dc *DataCollection) GetName() string {
+func (dc DataCollection) GetName() string {
 	return dc.Metadata.Name
 }
 
-func (dc *DataCollection) GetSource() Source {
+func (dc DataCollection) GetSource() Source {
 	return dc.Spec.Source
 }
 
-func (dc *DataCollection) GetSchedule() Schedule {
+func (dc DataCollection) GetSchedule() Schedule {
 	return dc.Spec.Schedule
 }
 
-func (dc *DataCollection) GetSecurities() []Security {
+func (dc DataCollection) GetSecurities() []Security {
 	return dc.Spec.Targets.Securities
 }
 
-func (dc *DataCollection) GetOptions() Options {
+func (dc DataCollection) GetOptions() Options {
 	return dc.Spec.Options
 }
 
 // TODO: Oscar
-func (dc *DataCollection) GetJobCount() int {
+func (dc DataCollection) GetJobCount() int {
 	return 0
 }
 
 // TODO: Oscar
-func (dc *DataCollection) Split(batchSize int) []CRD {
+func (dc DataCollection) Split(batchSize int) []CRD {
 	jobCount := dc.GetJobCount()
 
 	splitSize := jobCount / batchSize
@@ -57,7 +57,7 @@ func (dc *DataCollection) Split(batchSize int) []CRD {
 	return splitCRDs
 }
 
-func (dc *DataCollection) String() string {
+func (dc DataCollection) String() string {
 	return fmt.Sprintf("DataCollection(APIVersion: %s, Kind: %s, Metadata: %s, Spec: %s)",
 		dc.APIVersion,
 		dc.Kind.String(),
