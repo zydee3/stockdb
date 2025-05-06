@@ -196,8 +196,6 @@ func handleConnection(connection net.Conn, tracker *Tracker) {
 		return
 	}
 
-	logger.Infof("Received command: %+v", *cmd)
-
 	response := requestHandlers[cmd.Type](*cmd)
 
 	// Send response back to client

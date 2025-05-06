@@ -82,6 +82,15 @@ install: all
 	@chmod +x $(INSTALL_DIRECTORY)/$(STOCKCTL_OUTPUT_BINARY_NAME)
 	@echo "Install complete"
 
+# Install binaries to system
+.PHONY: dev
+dev: build
+	@echo "Installing binaries to $(INSTALL_DIRECTORY)"
+	@cp $(BUILD_DIRECTORY)/$(STOCKDB_OUTPUT_BINARY_NAME) $(INSTALL_DIRECTORY)
+	@cp $(BUILD_DIRECTORY)/$(STOCKCTL_OUTPUT_BINARY_NAME) $(INSTALL_DIRECTORY)
+	@chmod +x $(INSTALL_DIRECTORY)/$(STOCKDB_OUTPUT_BINARY_NAME)
+	@chmod +x $(INSTALL_DIRECTORY)/$(STOCKCTL_OUTPUT_BINARY_NAME)
+
 # Uninstall binaries from system
 .PHONY: uninstall
 uninstall:

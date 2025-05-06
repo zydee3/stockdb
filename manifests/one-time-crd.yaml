@@ -13,9 +13,9 @@ spec:
       - symbol: "GOOGL"
   schedule:
     type: "INTERVAL"
+    frequency: "MINUTE"
     startDate: "2025-01-01T00:00:00Z"
     endDate: "2025-04-01T00:00:00Z"
   options:
     timeout: "30m"
     retries: 3
-    priority: 1

@@ -16,3 +16,18 @@ type Job struct {
 	EndTime   time.Time `json:"endTime"`
 	Status    string    `json:"status"`
 }
+
+// type Job struct {
+// 	ID                int64               `db:"id"`
+// 	JobID             string              `db:"job_id"`
+// 	JobKind           crd              `db:"job_type"`
+// 	CreatedAt         time.Time           `db:"created_at"`
+// 	UpdatedAt         time.Time           `db:"updated_at"`
+// 	ScheduleType      crd.CRDScheduleType `db:"schedule_type"`
+// 	ScheduleStartAt   time.Time           `db:"schedule_start_at"`
+// 	ScheduleEndAt     *time.Time          `db:"schedule_end_at"`
+// 	ScheduleFrequency string              `db:"schedule_frequency"`
+// 	SpecJSON          string              `db:"spec_json"`
+// 	Attempts          int                 `db:"attempts"`
+// 	MaxRetries        int                 `db:"max_retries"`
+// }

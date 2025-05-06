@@ -1,58 +1,21 @@
 package crd
 
+import "fmt"
+
 // + Implements github.com/zydee3/stockdb/internal/common/crd.CRD interface
 
 type DataCollection struct {
-	APIVersion string                 `yaml:"apiVersion"`
-	Kind       string                 `yaml:"kind"`
-	Metadata   DataCollectionMetaData `yaml:"metadata"`
-	Spec       DataCollectionSpec     `yaml:"spec"`
-}
-
-type DataCollectionMetaData struct {
-	Name string `yaml:"name"`
-}
-
-type DataCollectionSpec struct {
-	Source   DataCollectionSource   `yaml:"source"`
-	Targets  DataCollectionTargets  `yaml:"targets"`
-	Schedule DataCollectionSchedule `yaml:"schedule"`
-	Options  DataCollectionOptions  `yaml:"options"`
-}
-
-type DataCollectionSource struct {
-	Type       string            `yaml:"type"`
-	Endpoint   string            `yaml:"endpoint"`
-	Parameters map[string]string `yaml:"parameters,omitempty"`
-}
-
-type DataCollectionTargets struct {
-	Securities []DataCollectionSecurity `yaml:"securities"`
-}
-
-type DataCollectionSecurity struct {
-	Symbol string `yaml:"symbol"`
-}
-
-type DataCollectionSchedule struct {
-	Type      string `yaml:"type"                json:"type"`
-	Frequency string `yaml:"frequency,omitempty" json:"frequency,omitempty"`
-	StartFrom string `yaml:"startFrom,omitempty" json:"startFrom,omitempty"`
-	StartDate string `yaml:"startDate,omitempty" json:"startDate,omitempty"`
-	EndDate   string `yaml:"endDate,omitempty"   json:"endDate,omitempty"`
-}
-
-type DataCollectionOptions struct {
-	Timeout  string `yaml:"timeout"  json:"timeout"`
-	Retries  int    `yaml:"retries"  json:"retries"`
-	Priority int    `yaml:"priority" json:"priority"`
+	APIVersion string   `db:"api_version" mapstructure:"APIVersion" yaml:"apiVersion"`
+	Kind       Kind     `db:"kind"        mapstructure:"Kind"       yaml:"kind"`
+	Metadata   MetaData `db:"metadata"    mapstructure:"Metadata"   yaml:"metadata"`
+	Spec       Spec     `db:"spec"        mapstructure:"Spec"       yaml:"spec"`
 }
 
 func (dc *DataCollection) GetAPIVersion() string {
 	return dc.APIVersion
 }
 
-func (dc *DataCollection) GetKind() string {
+func (dc *DataCollection) GetKind() Kind {
 	return dc.Kind
 }
 
@@ -60,19 +23,19 @@ func (dc *DataCollection) GetName() string {
 	return dc.Metadata.Name
 }
 
-func (dc *DataCollection) GetSource() DataCollectionSource {
+func (dc *DataCollection) GetSource() Source {
 	return dc.Spec.Source
 }
 
-func (dc *DataCollection) GetSchedule() DataCollectionSchedule {
+func (dc *DataCollection) GetSchedule() Schedule {
 	return dc.Spec.Schedule
 }
 
-func (dc *DataCollection) GetSecurities() []DataCollectionSecurity {
+func (dc *DataCollection) GetSecurities() []Security {
 	return dc.Spec.Targets.Securities
 }
 
-func (dc *DataCollection) GetOptions() DataCollectionOptions {
+func (dc *DataCollection) GetOptions() Options {
 	return dc.Spec.Options
 }
 
@@ -92,4 +55,13 @@ func (dc *DataCollection) Split(batchSize int) []CRD {
 
 	splitCRDs := make([]CRD, splitSize)
 	return splitCRDs
+}
+
+func (dc *DataCollection) String() string {
+	return fmt.Sprintf("DataCollection(APIVersion: %s, Kind: %s, Metadata: %s, Spec: %s)",
+		dc.APIVersion,
+		dc.Kind.String(),
+		dc.Metadata.String(),
+		dc.Spec.String(),
+	)
 }
