@@ -1,4 +1,4 @@
-# github.com/urfave/cli/v3 v3.3.3
+# github.com/urfave/cli/v3 v3.3.8
 ## explicit; go 1.22
 github.com/urfave/cli/v3
 # golang.org/x/time v0.12.0
